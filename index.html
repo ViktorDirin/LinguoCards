@@ -13,8 +13,60 @@
     <div id="app">
         <!-- Home Screen -->
         <div id="home-screen" class="screen active">
+            <!-- Settings Icon (Top Right) -->
+            <!-- Settings Icon (Top Right) -->
+            <!-- Icon moved to header flex container -->
+
+            <!-- Settings Modal -->
+            <div id="settings-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header" style="justify-content: center;">
+                        <h2>Settings</h2>
+                    </div>
+                    <div class="modal-body">
+                        <!-- PWA Actions -->
+                        <button id="install-app-btn" class="hidden"
+                            style="width: 100%; padding: 0.75rem 1rem; background-color: #2563eb; color: white; border-radius: 0.5rem; font-weight: 500; margin-bottom: 1rem; border: none; cursor: pointer; transition: background-color 0.2s;">
+                            Install App
+                        </button>
+
+                        <button id="check-update-btn"
+                            style="width: 100%; padding: 0.75rem 1rem; background-color: #334155; color: #e2e8f0; border-radius: 0.5rem; font-weight: 500; border: none; cursor: pointer; transition: background-color 0.2s; margin-bottom: 1rem;">
+                            Check for Updates
+                        </button>
+
+                        <div class="version-info"
+                            style="text-align: center; margin-bottom: 1.5rem; color: #64748b; font-size: 0.8rem;">
+                            v1.0.0
+                        </div>
+
+                        <!-- Close Button -->
+                        <button id="close-settings-btn"
+                            style="width: 100%; padding: 0.75rem 1rem; background-color: transparent; border: 1px solid #475569; color: #94a3b8; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="container">
-                <h1>LinguoCards</h1>
+                <div
+                    style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 1rem;">
+                    <h1 style="margin: 0;">LinguoCards</h1>
+
+                    <!-- Settings Icon (Flex Item) -->
+                    <div style="cursor: pointer; color: #64748b; transition: color 0.2s;"
+                        class="text-slate-500 hover:text-slate-300">
+                        <svg id="settings-btn" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                            </path>
+                        </svg>
+                    </div>
+                </div>
                 <p>Select a topic to start learning</p>
 
                 <div id="topic-list" class="topic-grid">
@@ -26,7 +78,13 @@
         <!-- Learning Screen -->
         <div id="learning-screen" class="screen">
             <header>
-                <button id="back-home-btn" class="btn-text">← Menu</button>
+                <button id="back-home-btn" class="btn-menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    Menu
+                </button>
                 <span id="progress-indicator">Card 1 of 11</span>
             </header>
 
@@ -36,6 +94,7 @@
                         <button id="speak-btn" class="btn-speak" title="Listen">🔊</button>
                         <div class="card-content">
                             <span class="term-large" id="card-term">Một</span>
+                            <span class="transcription-text" id="card-transcription">[Mot]</span>
                             <span class="category-tag">Numbers</span>
                         </div>
                     </div>

@@ -8,34 +8,34 @@ const DATA_STORE = {
         title: 'Vietnamese Numbers (0-10)',
         lang: 'vi-VN',
         items: [
-            { id: 1, term: "Không", translation: "Zero", category: "Numbers" },
-            { id: 2, term: "Một", translation: "One", category: "Numbers" },
-            { id: 3, term: "Hai", translation: "Two", category: "Numbers" },
-            { id: 4, term: "Ba", translation: "Three", category: "Numbers" },
-            { id: 5, term: "Bốn", translation: "Four", category: "Numbers" },
-            { id: 6, term: "Năm", translation: "Five", category: "Numbers" },
-            { id: 7, term: "Sáu", translation: "Six", category: "Numbers" },
-            { id: 8, term: "Bảy", translation: "Seven", category: "Numbers" },
-            { id: 9, term: "Tám", translation: "Eight", category: "Numbers" },
-            { id: 10, term: "Chín", translation: "Nine", category: "Numbers" },
-            { id: 11, term: "Mười", translation: "Ten", category: "Numbers" }
+            { id: 1, term: "Không", transcription: "[Khong]", translation: "Zero", category: "Numbers" },
+            { id: 2, term: "Một", transcription: "[Mot]", translation: "One", category: "Numbers" },
+            { id: 3, term: "Hai", transcription: "[Hai]", translation: "Two", category: "Numbers" },
+            { id: 4, term: "Ba", transcription: "[Ba]", translation: "Three", category: "Numbers" },
+            { id: 5, term: "Bốn", transcription: "[Bon]", translation: "Four", category: "Numbers" },
+            { id: 6, term: "Năm", transcription: "[Nam]", translation: "Five", category: "Numbers" },
+            { id: 7, term: "Sáu", transcription: "[Sau]", translation: "Six", category: "Numbers" },
+            { id: 8, term: "Bảy", transcription: "[Bay]", translation: "Seven", category: "Numbers" },
+            { id: 9, term: "Tám", transcription: "[Tam]", translation: "Eight", category: "Numbers" },
+            { id: 10, term: "Chín", transcription: "[Chin]", translation: "Nine", category: "Numbers" },
+            { id: 11, term: "Mười", transcription: "[Muoi]", translation: "Ten", category: "Numbers" }
         ]
     },
     'korean-numbers': {
         title: 'Korean Numbers (0-10)',
         lang: 'ko-KR',
         items: [
-            { id: 1, term: "영", translation: "Zero", category: "Numbers" },
-            { id: 2, term: "일", translation: "One", category: "Numbers" },
-            { id: 3, term: "이", translation: "Two", category: "Numbers" },
-            { id: 4, term: "삼", translation: "Three", category: "Numbers" },
-            { id: 5, term: "사", translation: "Four", category: "Numbers" },
-            { id: 6, term: "오", translation: "Five", category: "Numbers" },
-            { id: 7, term: "육", translation: "Six", category: "Numbers" },
-            { id: 8, term: "칠", translation: "Seven", category: "Numbers" },
-            { id: 9, term: "팔", translation: "Eight", category: "Numbers" },
-            { id: 10, term: "구", translation: "Nine", category: "Numbers" },
-            { id: 11, term: "십", translation: "Ten", category: "Numbers" }
+            { id: 1, term: "영", transcription: "[Yeong]", translation: "Zero", category: "Numbers" },
+            { id: 2, term: "일", transcription: "[Il]", translation: "One", category: "Numbers" },
+            { id: 3, term: "이", transcription: "[I]", translation: "Two", category: "Numbers" },
+            { id: 4, term: "삼", transcription: "[Sam]", translation: "Three", category: "Numbers" },
+            { id: 5, term: "사", transcription: "[Sa]", translation: "Four", category: "Numbers" },
+            { id: 6, term: "오", transcription: "[O]", translation: "Five", category: "Numbers" },
+            { id: 7, term: "육", transcription: "[Yuk]", translation: "Six", category: "Numbers" },
+            { id: 8, term: "칠", transcription: "[Chil]", translation: "Seven", category: "Numbers" },
+            { id: 9, term: "팔", transcription: "[Pal]", translation: "Eight", category: "Numbers" },
+            { id: 10, term: "구", transcription: "[Gu]", translation: "Nine", category: "Numbers" },
+            { id: 11, term: "십", transcription: "[Sip]", translation: "Ten", category: "Numbers" }
         ]
     }
 };
@@ -81,6 +81,9 @@ function speak(text) {
 }
 
 // Service Worker Registration
+// Service Worker & PWA Logic
+let deferredPrompt;
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
@@ -91,6 +94,42 @@ if ('serviceWorker' in navigator) {
                 console.log('ServiceWorker registration failed: ', err);
             });
     });
+}
+
+// Capture install prompt
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    deferredPrompt = e;
+    // Update UI notify the user they can install the PWA
+    showInstallPromotion();
+});
+
+function showInstallPromotion() {
+    const installBtn = document.getElementById('install-app-btn');
+    if (installBtn) {
+        installBtn.classList.remove('hidden');
+    }
+}
+
+async function installApp() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to the install prompt: ${outcome}`);
+    deferredPrompt = null;
+    document.getElementById('install-app-btn').classList.add('hidden');
+}
+
+async function checkForUpdates() {
+    if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        alert("Checking for updates... If a change is found, it will download in the background.");
+        await registration.update();
+    } else {
+        alert("Service Worker not supported in this browser.");
+    }
 }
 
 // Initialize
@@ -114,7 +153,9 @@ const elements = {
     learningScreen: document.getElementById('learning-screen'),
     quizScreen: document.getElementById('quiz-screen'),
     // startBtn removed as we'll have dynamic buttons
-    settingsBtn: document.getElementById('settings-btn'), // For future use
+    settingsBtn: document.getElementById('settings-btn'),
+    settingsModal: document.getElementById('settings-modal'),
+    closeSettingsBtn: document.getElementById('close-settings-btn'),
     backBtn: document.getElementById('back-home-btn'),
     // Quiz Elements
     quizBackBtn: document.getElementById('quiz-back-btn'),
@@ -125,6 +166,7 @@ const elements = {
 
     card: document.getElementById('flashcard'),
     cardTerm: document.getElementById('card-term'),
+    cardTranscription: document.getElementById('card-transcription'),
     cardTranslation: document.getElementById('card-translation'),
     prevBtn: document.getElementById('prev-btn'),
     nextBtn: document.getElementById('next-btn'),
@@ -152,6 +194,11 @@ function init() {
         window.speechSynthesis.onvoiceschanged = initVoices;
     }
     initVoices();
+
+    // Explicitly hide modal on init
+    if (elements.settingsModal) {
+        elements.settingsModal.classList.add('hidden');
+    }
 
     handleRoute(); // Handle initial load
 }
@@ -196,6 +243,26 @@ function setupEventListeners() {
 
     elements.backBtn.addEventListener('click', goHome);
     if (elements.quizBackBtn) elements.quizBackBtn.addEventListener('click', goHome);
+
+    // Settings Modal
+    if (elements.settingsBtn) {
+        elements.settingsBtn.addEventListener('click', () => {
+            elements.settingsModal.classList.remove('hidden');
+        });
+    }
+
+    if (elements.closeSettingsBtn) {
+        elements.closeSettingsBtn.addEventListener('click', () => {
+            elements.settingsModal.classList.add('hidden');
+        });
+    }
+
+    // PWA Buttons
+    const installBtn = document.getElementById('install-app-btn');
+    if (installBtn) installBtn.addEventListener('click', installApp);
+
+    const updateBtn = document.getElementById('check-update-btn');
+    if (updateBtn) updateBtn.addEventListener('click', checkForUpdates);
 
     elements.card.addEventListener('click', flipCard);
 
@@ -429,6 +496,7 @@ function updateCardUI() {
 
     // Update Content
     elements.cardTerm.textContent = item.term;
+    if (elements.cardTranscription) elements.cardTranscription.textContent = item.transcription;
     elements.cardTranslation.textContent = item.translation;
 
     // Update Progress
