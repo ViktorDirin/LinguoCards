@@ -43,41 +43,67 @@ const DATA_STORE = {
 // ... (State Management and Elements remain the same) ...
 
 function speak(text) {
-    if (!window.speechSynthesis) return;
-
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-
-    // Get available voices
-    // Use cached voices
-    if (voices.length === 0) {
-        voices = window.speechSynthesis.getVoices();
+    // 1. Audit: Ensure strict string input
+    if (typeof text !== 'string') {
+        console.warn('speak() called with non-string argument:', text);
+        return;
     }
 
-    // Determine language based on current topic or detect
-    let targetLang = 'vi-VN';
+    if (!window.speechSynthesis) return;
+
+    // 4. UI/UX: Cancel previous speech
+    window.speechSynthesis.cancel();
+
+    // 2. Enforce Strict Locale
+    let targetLang = 'vi-VN'; // Default to Vietnamese if topic detection fails, though usually topic should be present
     if (currentState.topicId && DATA_STORE[currentState.topicId]) {
         targetLang = DATA_STORE[currentState.topicId].lang;
     }
 
-    // Try to find a voice for the target language
-    let voice = voices.find(v => v.lang === targetLang);
+    // Get available voices
+    if (voices.length === 0) {
+        voices = window.speechSynthesis.getVoices();
+    }
 
-    // Fallback if strict match fails (e.g. ko-KR vs ko_KR)
+    // Try to find a voice for the target language
+    // Strict match first (e.g. 'vi-VN', 'ko-KR')
+    let voice = voices.find(v => v.lang === targetLang || v.lang.replace('_', '-') === targetLang);
+
+    // Fallback if strict match fails (try checking prefix, e.g. ko-KR vs ko)
     if (!voice) {
-        voice = voices.find(v => v.lang.startsWith(targetLang.split('-')[0]));
+        const shortLang = targetLang.split('-')[0];
+        voice = voices.find(v => v.lang.startsWith(shortLang));
     }
 
     if (voice) {
+        const utterance = new SpeechSynthesisUtterance(text);
         utterance.voice = voice;
         utterance.lang = targetLang;
+        utterance.rate = 0.9;
+
+        // 3. Debugging
+        console.log("Speaking term:", text);
+        window.speechSynthesis.speak(utterance);
     } else {
-        console.warn(`Voice ${targetLang} not found in the system.`);
-        utterance.lang = targetLang;
+        // Fallback: log warning instead of playing default voice
+        console.warn(`Voice for language ${targetLang} not found. Speech synthesis skipped to avoid incorrect accent.`);
     }
 
-    utterance.rate = 0.9;
-    window.speechSynthesis.speak(utterance);
+    // Update Debug Info in Settings Modal
+    const debugEl = document.getElementById('debug-info-log');
+    if (debugEl) {
+        if (voice) {
+            debugEl.innerHTML = `<div>Text: ${text}</div><div>Lang: ${targetLang}</div><div>Voice: ${voice.name}</div>`;
+        } else {
+            // 1. Logic Update & 2. User Friendly Alert
+            debugEl.innerHTML = `<div>Text: ${text}</div><div>Lang: ${targetLang}</div><div style="color: #ef4444; font-weight: bold;">Voice: NOT FOUND (Please install ${targetLang} TTS in your OS settings)</div>`;
+
+            // Optional: Briefly show modal if it's not open? Or some other notification. 
+            // For now, sticking strictly to the User Friendly Alert in Modal as requested.
+            // If we really want to be user friendly, we might want to alert if the Modal was closed.
+            // But the request said "red text in the Modal".
+        }
+    }
 }
 
 // Service Worker Registration
@@ -526,32 +552,4 @@ function prevCard() {
     }
 }
 
-function speak(text) {
-    if (!window.speechSynthesis) return;
 
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-
-    // Use cached voices
-    if (voices.length === 0) {
-        voices = window.speechSynthesis.getVoices();
-    }
-
-    let voice = voices.find(v => v.lang === 'vi-VN');
-    if (!voice) {
-        voice = voices.find(v => v.name.toLowerCase().includes('vietnam'));
-    }
-
-    if (voice) {
-        utterance.voice = voice;
-        utterance.lang = 'vi-VN';
-    } else {
-        utterance.lang = 'vi-VN';
-    }
-
-    utterance.rate = 0.9;
-    window.speechSynthesis.speak(utterance);
-}
-
-// Initialize
-document.addEventListener('DOMContentLoaded', init);
