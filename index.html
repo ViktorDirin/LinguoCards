@@ -7,6 +7,31 @@
     <title>LinguoCards</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6;
+        }
+
+        /* Firefox */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #4a4a4a #1a1a1a;
+        }
+    </style>
 </head>
 
 <body>
@@ -36,22 +61,51 @@
                         </button>
 
                         <!-- Debug Info -->
-                        <div style="color: #64748b; font-size: 0.75rem; text-transform: uppercase; margin-top: 1rem; margin-bottom: 0.5rem;">
+                        <div
+                            style="color: #64748b; font-size: 0.75rem; text-transform: uppercase; margin-top: 1rem; margin-bottom: 0.5rem;">
                             Debug Info
                         </div>
-                        <div id="debug-info-log" 
-                             style="background-color: rgba(2, 6, 23, 0.5); border: 1px solid #1e293b; border-radius: 0.25rem; padding: 0.75rem; font-size: 0.75rem; font-family: monospace; color: #10b981; word-break: break-all; min-height: 60px; margin-bottom: 1.5rem;">
+                        <div id="debug-info-log"
+                            style="background-color: rgba(2, 6, 23, 0.5); border: 1px solid #1e293b; border-radius: 0.25rem; padding: 0.75rem; font-size: 0.75rem; font-family: monospace; color: #10b981; word-break: break-all; min-height: 60px; margin-bottom: 1.5rem;">
                             Waiting for speech trigger...
                         </div>
 
                         <div class="version-info"
                             style="text-align: center; margin-bottom: 1.5rem; color: #64748b; font-size: 0.8rem;">
-                            v1.0.0
+                            v1.3.6
                         </div>
 
                         <!-- Close Button -->
                         <button id="close-settings-btn"
                             style="width: 100%; padding: 0.75rem 1rem; background-color: transparent; border: 1px solid #475569; color: #94a3b8; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rules Reference Modal -->
+            <div id="rules-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header" style="justify-content: center;">
+                        <h2 style="color: #38bdf8;">Vietnamese Number Rules</h2>
+                    </div>
+                    <div class="modal-body" style="text-align: left; color: #cbd5e1; line-height: 1.6;">
+                        <ul style="list-style-type: none; padding: 0;">
+                            <li style="margin-bottom: 0.75rem;">• <strong>15.</strong> Spoken as 'mười lăm' (instead of
+                                năm).</li>
+                            <li style="margin-bottom: 0.75rem;">• <strong>21, 31... 91.</strong> The '1' becomes 'mốt'
+                                (instead of một).</li>
+                            <li style="margin-bottom: 0.75rem;">• <strong>25, 35... 95.</strong> The '5' becomes 'lăm'
+                                (instead of năm).</li>
+                            <li style="margin-bottom: 0.75rem;">• <strong>24, 34... 94.</strong> Often '4' sounds like
+                                'tư' (instead of bốn).</li>
+                            <li style="margin-bottom: 0.75rem;">• <strong>Tens.</strong> 10 is 'mười', but in compounds
+                                (20, 30...) it is 'mươi'.</li>
+                        </ul>
+                        <!-- Close Button -->
+                        <button id="close-rules-btn"
+                            style="width: 100%; padding: 0.75rem 1rem; background-color: transparent; border: 1px solid #475569; color: #94a3b8; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-top: 1rem;">
                             Close
                         </button>
                     </div>
@@ -86,8 +140,9 @@
 
         <!-- Learning Screen -->
         <div id="learning-screen" class="screen">
-            <header>
-                <button id="back-home-btn" class="btn-menu">
+            <header style="display: flex; justify-content: center; align-items: center; width: 100%; height: 4rem;">
+                <button id="back-home-btn" class="btn-menu"
+                    style="position: fixed; top: 1rem; left: 1rem; z-index: 50;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="15 18 9 12 15 6"></polyline>
