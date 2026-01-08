@@ -42,66 +42,65 @@ const DATA_STORE = {
 
 // ... (State Management and Elements remain the same) ...
 
-function speak(text) {
-    // 1. Audit: Ensure strict string input
-    if (typeof text !== 'string') {
-        console.warn('speak() called with non-string argument:', text);
-        return;
-    }
+function speak(text, langCode) {
+    // 4. UI/UX: Cancel previous speech (TTS)
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
 
-    if (!window.speechSynthesis) return;
-
-    // 4. UI/UX: Cancel previous speech
-    window.speechSynthesis.cancel();
-
-    // 2. Enforce Strict Locale
-    let targetLang = 'vi-VN'; // Default to Vietnamese if topic detection fails, though usually topic should be present
-    if (currentState.topicId && DATA_STORE[currentState.topicId]) {
-        targetLang = DATA_STORE[currentState.topicId].lang;
-    }
-
-    // Get available voices
-    if (voices.length === 0) {
-        voices = window.speechSynthesis.getVoices();
-    }
-
-    // Try to find a voice for the target language
-    // Strict match first (e.g. 'vi-VN', 'ko-KR')
-    let voice = voices.find(v => v.lang === targetLang || v.lang.replace('_', '-') === targetLang);
-
-    // Fallback if strict match fails (try checking prefix, e.g. ko-KR vs ko)
-    if (!voice) {
-        const shortLang = targetLang.split('-')[0];
-        voice = voices.find(v => v.lang.startsWith(shortLang));
-    }
-
-    if (voice) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.voice = voice;
-        utterance.lang = targetLang;
-        utterance.rate = 0.9;
-
-        // 3. Debugging
-        console.log("Speaking term:", text);
-        window.speechSynthesis.speak(utterance);
-    } else {
-        // Fallback: log warning instead of playing default voice
-        console.warn(`Voice for language ${targetLang} not found. Speech synthesis skipped to avoid incorrect accent.`);
-    }
-
-    // Update Debug Info in Settings Modal
     const debugEl = document.getElementById('debug-info-log');
-    if (debugEl) {
-        if (voice) {
-            debugEl.innerHTML = `<div>Text: ${text}</div><div>Lang: ${targetLang}</div><div>Voice: ${voice.name}</div>`;
-        } else {
-            // 1. Logic Update & 2. User Friendly Alert
-            debugEl.innerHTML = `<div>Text: ${text}</div><div>Lang: ${targetLang}</div><div style="color: #ef4444; font-weight: bold;">Voice: NOT FOUND (Please install ${targetLang} TTS in your OS settings)</div>`;
 
-            // Optional: Briefly show modal if it's not open? Or some other notification. 
-            // For now, sticking strictly to the User Friendly Alert in Modal as requested.
-            // If we really want to be user friendly, we might want to alert if the Modal was closed.
-            // But the request said "red text in the Modal".
+    // MP3 Logic
+    const path = `assets/audio/${langCode}/${text}.mp3`;
+    const audio = new Audio(path);
+
+    // Error Handler -> Fallback to TTS
+    audio.onerror = () => {
+        console.warn(`MP3 not found at ${path}, falling back to System TTS.`);
+        useSystemTTS();
+    };
+
+    // Attempt to play MP3
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+        playPromise.then(() => {
+            console.log("Playing MP3:", path);
+            if (debugEl) {
+                debugEl.innerHTML = `<div>Text: ${text}</div><div>Source: <span style="color: #3b82f6; font-weight: bold;">MP3 File</span></div><div>Path: ${path}</div>`;
+            }
+        }).catch(err => {
+            // Auto-play policy or other error
+            console.warn("Audio play error (auto-play blocked or 404), trying TTS:", err);
+            useSystemTTS();
+        });
+    }
+
+    function useSystemTTS() {
+        if (!window.speechSynthesis) return;
+
+        // Get available voices
+        if (voices.length === 0) {
+            voices = window.speechSynthesis.getVoices();
+        }
+
+        // Try to find a voice for the target language (starts with langCode, e.g. 'vi', 'ko')
+        let voice = voices.find(v => v.lang.startsWith(langCode));
+
+        if (voice) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.voice = voice;
+            utterance.lang = voice.lang;
+            utterance.rate = 0.9;
+
+            console.log("Speaking term (TTS):", text);
+            window.speechSynthesis.speak(utterance);
+
+            if (debugEl) {
+                debugEl.innerHTML = `<div>Text: ${text}</div><div>Lang: ${voice.lang}</div><div>Voice: ${voice.name}</div><div>Source: System TTS</div>`;
+            }
+        } else {
+            console.warn(`Voice for language ${langCode} not found.`);
+            if (debugEl) {
+                debugEl.innerHTML = `<div>Text: ${text}</div><div>Lang: ${langCode}</div><div style="color: #ef4444; font-weight: bold;">Voice: NOT FOUND</div><div>Source: System TTS (Failed)</div>`;
+            }
         }
     }
 }
@@ -296,9 +295,17 @@ function setupEventListeners() {
     if (elements.speakBtn) {
         elements.speakBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+
+            // Visual Feedback: Blue color for 300ms
+            elements.speakBtn.classList.add('text-blue-500');
+            setTimeout(() => {
+                elements.speakBtn.classList.remove('text-blue-500');
+            }, 300);
+
             if (currentState.items.length > 0) {
                 const item = currentState.items[currentState.currentIndex];
-                speak(item.term);
+                const lang = DATA_STORE[currentState.topicId].lang.split('-')[0];
+                speak((item.id - 1).toString(), lang);
             }
         });
     }
@@ -475,7 +482,8 @@ function handleQuizAnswer(correctItem, selectedItem, btn) {
     }
 
     // Play sound
-    speak(correctItem.term);
+    const lang = DATA_STORE[currentState.topicId].lang.split('-')[0];
+    speak((correctItem.id - 1).toString(), lang);
 
     // Next question delay
     setTimeout(() => {
@@ -534,7 +542,8 @@ function updateCardUI() {
 
     // Auto-play speech
     setTimeout(() => {
-        speak(item.term);
+        const lang = DATA_STORE[currentState.topicId].lang.split('-')[0];
+        speak((item.id - 1).toString(), lang);
     }, 300);
 }
 
