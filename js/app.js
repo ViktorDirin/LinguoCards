@@ -248,12 +248,46 @@ async function installApp() {
 }
 
 async function checkForUpdates() {
-    if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.ready;
-        alert("Checking for updates... If a change is found, it will download in the background.");
-        await registration.update();
-    } else {
-        alert("Service Worker not supported in this browser.");
+    // 1. Confirmation / Message
+    if (!confirm("Force Update: This will clear the cache and reload the latest version (v1.3.7). Continue?")) {
+        return;
+    }
+
+    // UI Feedback (Loading state)
+    const updateBtn = document.getElementById('check-update-btn');
+    if (updateBtn) {
+        updateBtn.textContent = "Clearing Cache...";
+        updateBtn.disabled = true;
+    }
+
+    try {
+        // 2. Clear All Caches
+        if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(key => caches.delete(key)));
+            console.log('Caches cleared.');
+        }
+
+        // 3. Unregister Service Worker
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const registration of registrations) {
+                await registration.unregister();
+            }
+            console.log('Service Workers unregistered.');
+        }
+
+        // 4. Final Alert & Reload
+        alert("App cache cleared. Reloading to version v1.3.7...");
+        window.location.reload(true);
+
+    } catch (error) {
+        console.error("Update failed:", error);
+        alert("An error occurred during update. Please manually refresh.");
+        if (updateBtn) {
+            updateBtn.textContent = "Check for Updates";
+            updateBtn.disabled = false;
+        }
     }
 }
 
