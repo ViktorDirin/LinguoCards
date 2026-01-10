@@ -37,16 +37,6 @@ const DATA_STORE = {
                     { id: 91, term: "Chín Mươi", transcription: "[Chin Muoi]", translation: "Ninety", category: "Tens" }
                 ]
             },
-            {
-                name: 'Numbers 21-99',
-                items: [
-                    { id: 101, val: 21, term: "Hai mươi mốt", transcription: "[Hai muoi mot]", translation: "Twenty-one", category: "Numbers 21-99" },
-                    { id: 105, val: 25, term: "Hai mươi lăm", transcription: "[Hai muoi lam]", translation: "Twenty-five", category: "Numbers 21-99" },
-                    { id: 114, val: 34, term: "Ba mươi tư", transcription: "[Ba muoi tu]", translation: "Thirty-four", category: "Numbers 21-99" },
-                    { id: 127, val: 47, term: "Bốn mươi bảy", transcription: "[Bon muoi bay]", translation: "Forty-seven", category: "Numbers 21-99" },
-                    { id: 138, val: 58, term: "Năm mươi tám", transcription: "[Nam muoi tam]", translation: "Fifty-eight", category: "Numbers 21-99" }
-                ]
-            }
         ]
     },
     'korean-numbers': {
@@ -99,8 +89,16 @@ const DATA_STORE = {
 // ... (State Management and Elements remain the same) ...
 
 function speak(text, langCode) {
-    // 4. UI/UX: Cancel previous speech (TTS)
+    // 4. UI/UX: Cancel previous speech (TTS & Audio)
     if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (window.currentAudio) {
+        window.currentAudio.pause();
+        window.currentAudio = null;
+    }
+    if (window.speechTimeout) {
+        clearTimeout(window.speechTimeout);
+        window.speechTimeout = null;
+    }
 
     const debugEl = document.getElementById('debug-info-log');
 
@@ -151,6 +149,7 @@ function speak(text, langCode) {
     // MP3 Logic (Standard)
     const path = `assets/audio/${langCode}/${text}.mp3`;
     const audio = new Audio(path);
+    window.currentAudio = audio;
 
     // Error Handler -> Fallback to TTS
     audio.onerror = () => {
@@ -306,6 +305,10 @@ let currentState = {
     }
 };
 
+// Global Audio State
+window.currentAudio = null;
+window.speechTimeout = null;
+
 // 3. DOM Elements
 const elements = {
     homeScreen: document.getElementById('home-screen'),
@@ -363,7 +366,13 @@ function init() {
 }
 
 function renderLanguageMenu() {
+    // 1. Reset Container Styles
+    elements.topicList.removeAttribute('style');
+    // Use our defined CSS class instead of utility classes
+    elements.topicList.className = 'topic-grid';
+
     elements.topicList.innerHTML = '';
+
     // Update instruction text
     const instruction = document.querySelector('#home-screen p');
     if (instruction) instruction.textContent = "Select a Language";
@@ -373,7 +382,8 @@ function renderLanguageMenu() {
         const totalCards = topic.categories.reduce((acc, cat) => acc + cat.items.length, 0);
 
         const card = document.createElement('div');
-        card.className = 'topic-card';
+        // Clean card classes
+        card.className = 'topic-card w-full';
         card.style.cursor = 'pointer';
         card.innerHTML = `
             <div style="width: 100%; text-align: center; padding: 1rem;">
@@ -391,30 +401,31 @@ function renderLanguageMenu() {
 }
 
 function renderCategoryMenu(topicId) {
-    elements.topicList.innerHTML = '';
-    // Mandatory Scrolling Fix
-    elements.topicList.style.setProperty('padding-bottom', '12rem', 'important');
-    elements.topicList.style.setProperty('overflow-y', 'auto', 'important');
-    elements.topicList.style.height = '100vh';
-    elements.topicList.style.pointerEvents = 'auto';
-
-    // Grid Layout
-    elements.topicList.style.display = 'grid';
-    elements.topicList.style.gridTemplateColumns = 'repeat(auto-fit, minmax(320px, 1fr))';
-    elements.topicList.style.gap = '1.5rem';
-    elements.topicList.style.justifyItems = 'center';
-    elements.topicList.style.width = '100%';
-    elements.topicList.style.margin = '0 auto';
-
     const topic = DATA_STORE[topicId];
 
     // Hide default instruction
     const instruction = document.querySelector('#home-screen p');
     if (instruction) instruction.style.display = 'none';
 
+    // Scroll Reset (Mobile Fix)
+    window.scrollTo(0, 0);
+
+    // 1. Reset Container Styles (Mental Model: "Scrollable Wrapper")
+    elements.topicList.removeAttribute('style');
+    elements.topicList.innerHTML = '';
+
+    // Apply Scrollable Container Styles
+    elements.topicList.style.display = 'block';
+    elements.topicList.style.height = 'auto';
+    elements.topicList.style.maxHeight = 'calc(100vh - 4rem)';
+    elements.topicList.style.overflowY = 'auto';
+    elements.topicList.style.paddingBottom = '12rem';
+    elements.topicList.style.width = '100%';
+    elements.topicList.style.pointerEvents = 'auto';
+
+    // 2. Add Header (Directly to block container)
     // Header Container (Flex Centered)
     const header = document.createElement('div');
-    header.style.gridColumn = '1 / -1';
     header.style.cssText = 'position: relative; display: flex; justify-content: center; align-items: center; width: 100%; height: 4rem; margin-bottom: 2rem; padding-top: 1rem;';
 
     header.innerHTML = `
@@ -434,6 +445,11 @@ function renderCategoryMenu(topicId) {
     `;
     elements.topicList.appendChild(header);
 
+    // 3. Create Grid Wrapper for Cards
+    const gridContainer = document.createElement('div');
+    gridContainer.className = 'topic-grid';
+    elements.topicList.appendChild(gridContainer);
+
     header.querySelector('#menu-back-btn').addEventListener('click', () => {
         const instruction = document.querySelector('#home-screen p');
         if (instruction) instruction.style.display = 'block';
@@ -447,12 +463,12 @@ function renderCategoryMenu(topicId) {
         });
     }
 
+    // 4. Populate Cards (Append to Grid Container)
     topic.categories.forEach((cat, index) => {
         const card = document.createElement('div');
-        card.className = 'topic-card';
+        card.className = 'topic-card'; // Grid handles gap
         card.style.width = '100%';
-        card.style.maxWidth = '24rem';
-        card.style.margin = '0 auto';
+
         card.innerHTML = `
             <div>
                 <h3>${cat.name}</h3>
@@ -475,7 +491,7 @@ function renderCategoryMenu(topicId) {
             window.location.hash = `/quiz/${topicId}/${index}`;
         });
 
-        elements.topicList.appendChild(card);
+        gridContainer.appendChild(card);
     });
 
     // Special Cards (Infinite Mode & Rules)
@@ -485,8 +501,6 @@ function renderCategoryMenu(topicId) {
             const c = document.createElement('div');
             c.className = 'topic-card';
             c.style.width = '100%';
-            c.style.maxWidth = '24rem';
-            c.style.margin = '0 auto';
             c.innerHTML = `
                 <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
                     <div>
@@ -497,21 +511,18 @@ function renderCategoryMenu(topicId) {
                 </div>
             `;
             c.addEventListener('click', () => { window.location.hash = `#/infinite/${topicId}/${mode}`; });
-            elements.topicList.appendChild(c);
+            gridContainer.appendChild(c);
         };
 
         addInfCard("Infinite: Tens (21-99)", "tens", "rgba(168, 85, 247, 0.5)"); // Purple
         addInfCard("Infinite: Hundreds (100-999)", "hundreds", "rgba(59, 130, 246, 0.5)"); // Blue
         addInfCard("Infinite: Round Thousands", "thousands", "rgba(16, 185, 129, 0.5)"); // Green
         addInfCard("Infinite: Absolute (1-1M)", "absolute", "rgba(239, 68, 68, 0.5)"); // Red
-
     } else {
         // Korean Infinite Mode (Fallback)
         const infCard = document.createElement('div');
         infCard.className = 'topic-card';
         infCard.style.width = '100%';
-        infCard.style.maxWidth = '24rem';
-        infCard.style.margin = '0 auto';
         infCard.innerHTML = `
             <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
                 <div>
@@ -524,7 +535,7 @@ function renderCategoryMenu(topicId) {
         infCard.addEventListener('click', () => {
             window.location.hash = `#/infinite/${topicId}`; // Defaults to tens
         });
-        elements.topicList.appendChild(infCard);
+        gridContainer.appendChild(infCard);
     }
 }
 
@@ -569,7 +580,7 @@ function setupEventListeners() {
 
     // Speak button
     if (elements.speakBtn) {
-        elements.speakBtn.addEventListener('click', (e) => {
+        elements.speakBtn.onclick = (e) => {
             e.stopPropagation();
 
             // Visual Feedback: Blue color for 300ms
@@ -611,7 +622,6 @@ function setupEventListeners() {
                 // ALTERNATIVE: Just pass the known number for the new items.
                 // I will add `val: 21` etc to the new items in step 1.
                 // And update the speak call to use `item.val || (item.id - 1)`.
-
                 // REVISION TO STEP 1 CHUNKS NEEDED? YES. 
                 // I will use `val` in the new items.
 
@@ -620,7 +630,7 @@ function setupEventListeners() {
 
                 speak(val.toString(), lang);
             }
-        });
+        };
     }
 
     elements.nextBtn.addEventListener('click', (e) => {
@@ -902,12 +912,13 @@ function updateCardUI() {
     elements.nextBtn.disabled = currentState.currentIndex === currentState.items.length - 1;
 
     // Auto-play speech
-    setTimeout(() => {
+    if (window.speechTimeout) clearTimeout(window.speechTimeout);
+    window.speechTimeout = setTimeout(() => {
         const lang = DATA_STORE[currentState.topicId].lang.split('-')[0];
         let val = item.val;
         if (val === undefined) val = item.id - 1;
         speak(val.toString(), lang);
-    }, 300);
+    }, 40);
 }
 
 function nextCard() {
@@ -944,12 +955,13 @@ function playSequence(paths) {
 
         const path = paths[index];
         const audio = new Audio(path);
+        window.currentAudio = audio;
 
         console.log(`Playing sequence [${index + 1}/${paths.length}]: ${path}`);
 
         audio.onended = () => {
             index++;
-            setTimeout(playNext, 100); // 100ms gap
+            playNext();
         };
 
         audio.onerror = (err) => {
@@ -1001,10 +1013,11 @@ function regenerateInfiniteCard() {
         currentState.isFlipped = false;
     }
 
-    setTimeout(() => {
+    if (window.speechTimeout) clearTimeout(window.speechTimeout);
+    window.speechTimeout = setTimeout(() => {
         const lang = DATA_STORE[topicId].lang.split('-')[0];
         speak(num.toString(), lang);
-    }, 300);
+    }, 40);
 }
 
 function renderInfiniteMode(topicId, mode = 'tens') {
