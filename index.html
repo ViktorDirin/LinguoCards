@@ -77,7 +77,7 @@
 
                         <div class="version-info"
                             style="text-align: center; margin-bottom: 1.5rem; color: #64748b; font-size: 0.8rem;">
-                            v1.3.36
+                            v1.3.49
                         </div>
 
                         <!-- Close Button -->
@@ -202,13 +202,13 @@
         <div id="quiz-screen" class="screen">
             <header
                 style="position: relative; padding-top: 4rem; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
-                <button id="quiz-back-btn" class="btn-text"
-                    style="position: absolute; top: 1rem; left: 1rem; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; z-index: 10;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                <button id="quiz-back-btn" class="btn-menu"
+                    style="position: fixed; top: 1rem; left: 1rem; z-index: 50;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="15 18 9 12 15 6"></polyline>
                     </svg>
-                    Back to Menu
+                    Back
                 </button>
                 <h2 id="quiz-header-title"
                     style="margin: 0; font-size: 1.5rem; color: #e2e8f0; width: 100%; text-align: center; padding: 0 1rem;">
@@ -216,6 +216,9 @@
             </header>
 
             <main class="quiz-container" style="justify-content: flex-start; padding-top: 1rem;">
+                <div id="quiz-progress"
+                    style="width: 100%; text-align: center; color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">
+                </div>
                 <!-- Audio Trigger -->
                 <button id="quiz-play-btn" class="quiz-sound-trigger">
                     🔊

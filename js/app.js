@@ -36,7 +36,62 @@ const DATA_STORE = {
                     { id: 81, term: "Tám Mươi", transcription: "[Tam Muoi]", translation: "Eighty", category: "Tens" },
                     { id: 91, term: "Chín Mươi", transcription: "[Chin Muoi]", translation: "Ninety", category: "Tens" }
                 ]
-            },
+            }
+        ]
+    },
+    'vietnamese-market': {
+        title: 'Vietnamese Market',
+        lang: 'vi-VN',
+        categories: [
+            {
+                name: 'Market Basics',
+                items: [
+                    { id: 201, term: "Bao nhiêu?", transcription: "", translation: "How much?", category: "Market Basics", audio: "market_how_much" },
+                    { id: 202, term: "Đắt quá!", transcription: "", translation: "Too expensive!", category: "Market Basics", audio: "market_expensive" },
+                    { id: 203, term: "Giảm giá không?", transcription: "", translation: "Discount?", category: "Market Basics", audio: "market_discount" },
+                    { id: 204, term: "Tôi mua cái này", transcription: "", translation: "I buy this", category: "Market Basics", audio: "market_buy_this" },
+                    { id: 205, term: "Hoa quả", transcription: "", translation: "Fruit", category: "Market Basics", audio: "market_fruit" },
+                    { id: 206, term: "Nước", transcription: "", translation: "Water", category: "Market Basics", audio: "market_water" },
+                    { id: 207, term: "Sữa", transcription: "", translation: "Milk", category: "Market Basics", audio: "market_milk" },
+                    { id: 208, term: "Cân", transcription: "", translation: "Kilogram", category: "Market Basics", audio: "market_kg" },
+                    { id: 209, term: "Thịt", transcription: "", translation: "Meat", category: "Market Basics", audio: "market_meat" },
+                    { id: 210, term: "Cá", transcription: "", translation: "Fish", category: "Market Basics", audio: "market_fish" },
+                    { id: 211, term: "Rau", transcription: "", translation: "Vegetables", category: "Market Basics", audio: "market_veg" },
+                    { id: 212, term: "Trứng", transcription: "", translation: "Eggs", category: "Market Basics", audio: "market_eggs" }
+                ]
+            }
+        ]
+    },
+    'vietnamese-basics': {
+        title: 'Vietnamese Basics',
+        lang: 'vi-VN',
+        categories: [
+            {
+                name: 'Essential Phrases',
+                items: [
+                    { id: 301, term: "Xin chào", transcription: "[Sin chao]", translation: "Hello", category: "Basics", audio: "basic_hello" },
+                    { id: 302, term: "Cảm ơn", transcription: "[Cam on]", translation: "Thank you", category: "Basics", audio: "basic_thanks" },
+                    { id: 303, term: "Vâng", transcription: "[Vang]", translation: "Yes", category: "Basics", audio: "basic_yes" },
+                    { id: 304, term: "Không", transcription: "[Khong]", translation: "No", category: "Basics", audio: "basic_no" },
+                    { id: 305, term: "Xin lỗi", transcription: "[Sin loi]", translation: "Sorry", category: "Basics", audio: "basic_sorry" },
+                    { id: 306, term: "Tạm biệt", transcription: "[Tam biet]", translation: "Goodbye", category: "Basics", audio: "basic_goodbye" },
+                    { id: 307, term: "Đàn ông", transcription: "[Dan ong]", translation: "Man", category: "Basics", audio: "basic_man" },
+                    { id: 308, term: "Phụ nữ", transcription: "[Phu nu]", translation: "Woman", category: "Basics", audio: "basic_woman" },
+                    { id: 309, term: "Tốt", transcription: "[Tot]", translation: "Good", category: "Basics", audio: "basic_good" },
+                    { id: 310, term: "Tôi không hiểu", transcription: "[Toi khong hieu]", translation: "I don't understand", category: "Basics", audio: "basic_dont_understand" },
+                    { id: 311, term: "Tên tôi là", transcription: "[Ten toi la]", translation: "My name is", category: "Basics", audio: "basic_my_name" },
+                    { id: 312, term: "Ở đâu", transcription: "[O dau]", translation: "Where is", category: "Basics", audio: "basic_where_is" },
+                    // v1.3.45 Additions
+                    { id: 313, term: "Làm ơn nói chậm lại", transcription: "", translation: "Speak slower, please", category: "Basics", audio: "basic_speak_slower" },
+                    { id: 314, term: "Cái này là gì?", transcription: "", translation: "What is this?", category: "Basics", audio: "basic_what_is_this" },
+                    { id: 315, term: "Tôi hiểu", transcription: "", translation: "I understand", category: "Basics", audio: "basic_understand" },
+                    { id: 316, term: "Nhà vệ sinh ở đâu?", transcription: "", translation: "Where is the toilet?", category: "Basics", audio: "basic_toilet" },
+                    { id: 317, term: "Bạn có thể giúp tôi không?", transcription: "", translation: "Can you help me?", category: "Basics", audio: "basic_help_me" },
+                    { id: 318, term: "Một lần nữa", transcription: "", translation: "One more time", category: "Basics", audio: "basic_one_more_time" },
+                    { id: 319, term: "Chờ một chút", transcription: "", translation: "Wait a minute", category: "Basics", audio: "basic_wait_minute" },
+                    { id: 320, term: "Không có gì", transcription: "", translation: "No problem", category: "Basics", audio: "basic_no_problem" }
+                ]
+            }
         ]
     },
     'korean-numbers': {
@@ -88,7 +143,7 @@ const DATA_STORE = {
 
 // ... (State Management and Elements remain the same) ...
 
-function speak(text, langCode) {
+function speak(text, langCode, audioOverride = null) {
     // 4. UI/UX: Cancel previous speech (TTS & Audio)
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     if (window.currentAudio) {
@@ -102,13 +157,45 @@ function speak(text, langCode) {
 
     const debugEl = document.getElementById('debug-info-log');
 
+    // ... (inside speak)
     // 4a. Logic for limit 21-99 (Composite Audio)
     const num = parseInt(text);
-    // Extended Logic for Vietnamese Numbers (Up to 999,999,999)
-    if (langCode === 'vi' && !isNaN(num) && num > 10) {
-        if (typeof getVietnameseAudioPaths === 'function') {
-            const paths = getVietnameseAudioPaths(num);
-            if (paths.length > 0) {
+
+    // STRICTLY BYPASS numeric stitching if override provided (v1.3.42)
+    if (!audioOverride) {
+        // Extended Logic for Vietnamese Numbers (Up to 999,999,999)
+        if (langCode === 'vi' && !isNaN(num) && num > 10) {
+            if (typeof getVietnameseAudioPaths === 'function') {
+                const paths = getVietnameseAudioPaths(num);
+                if (paths.length > 0) {
+                    console.log(`Stitching audio for ${text}:`, paths);
+                    playSequence(paths);
+                    if (debugEl) {
+                        debugEl.innerHTML = `<div>Text: ${text}</div><div>Source: <span style="color: #a855f7; font-weight: bold;">Composite (Stitched)</span></div><div>Paths: ${paths.join(', ')}</div>`;
+                    }
+                    return;
+                }
+            }
+        }
+
+        if (!isNaN(num) && num >= 21 && num <= 99) {
+            const tens = Math.floor(num / 10) * 10;
+            const unit = num % 10;
+            if (unit !== 0) {
+                let unitFile = `${unit}.mp3`;
+
+                // Vietnamese Exceptions
+                if (langCode === 'vi') {
+                    if (unit === 1) unitFile = '1_mot.mp3'; // Mốt
+                    if (unit === 5) unitFile = '5_lam.mp3'; // Lăm
+                    // Note: 4 is 'Tư' in some contexts but 'Bốn' is often accepted. Keeping standard for now unless requested.
+                }
+
+                const paths = [
+                    `assets/audio/${langCode}/${tens}.mp3`,
+                    `assets/audio/${langCode}/${unitFile}`
+                ];
+
                 console.log(`Stitching audio for ${text}:`, paths);
                 playSequence(paths);
                 if (debugEl) {
@@ -119,35 +206,12 @@ function speak(text, langCode) {
         }
     }
 
-    if (!isNaN(num) && num >= 21 && num <= 99) {
-        const tens = Math.floor(num / 10) * 10;
-        const unit = num % 10;
-        if (unit !== 0) {
-            let unitFile = `${unit}.mp3`;
 
-            // Vietnamese Exceptions
-            if (langCode === 'vi') {
-                if (unit === 1) unitFile = '1_mot.mp3'; // Mốt
-                if (unit === 5) unitFile = '5_lam.mp3'; // Lăm
-                // Note: 4 is 'Tư' in some contexts but 'Bốn' is often accepted. Keeping standard for now unless requested.
-            }
-
-            const paths = [
-                `assets/audio/${langCode}/${tens}.mp3`,
-                `assets/audio/${langCode}/${unitFile}`
-            ];
-
-            console.log(`Stitching audio for ${text}:`, paths);
-            playSequence(paths);
-            if (debugEl) {
-                debugEl.innerHTML = `<div>Text: ${text}</div><div>Source: <span style="color: #a855f7; font-weight: bold;">Composite (Stitched)</span></div><div>Paths: ${paths.join(', ')}</div>`;
-            }
-            return;
-        }
-    }
 
     // MP3 Logic (Standard)
-    const path = `assets/audio/${langCode}/${text}.mp3`;
+    // If audioOverride is present, use it. Otherwise use text.
+    const filename = audioOverride || text;
+    const path = `assets/audio/${langCode}/${filename}.mp3`;
     const audio = new Audio(path);
     window.currentAudio = audio;
 
@@ -328,6 +392,7 @@ const elements = {
     quizDisplay: document.getElementById('quiz-input-display'),
     quizKeypad: document.getElementById('quiz-keypad'),
     quizSubmitBtn: document.getElementById('quiz-submit-btn'),
+    quizProgress: document.getElementById('quiz-progress'), // Added v1.3.45
     quizStats: document.getElementById('quiz-stats'),
     quizVictoryOverlay: document.getElementById('quiz-victory-overlay'),
     quizFinalScore: document.getElementById('quiz-final-score'),
@@ -391,9 +456,31 @@ function renderLanguageMenu() {
     const instruction = document.querySelector('#home-screen p');
     if (instruction) instruction.textContent = "Select a Language";
 
+    const processedLangs = new Set();
+
     Object.keys(DATA_STORE).forEach(key => {
         const topic = DATA_STORE[key];
-        const totalCards = topic.categories.reduce((acc, cat) => acc + cat.items.length, 0);
+        const langFamily = topic.lang.split('-')[0]; // vi, ko
+
+        // Check if we already handled this language family's main hub
+        if (processedLangs.has(langFamily)) return;
+
+        let cardTitle = topic.title;
+        let cardAction = `#/menu/${key}`;
+        let totalCount = topic.categories.reduce((acc, cat) => acc + cat.items.length, 0);
+
+        // Special Case: Vietnamese Hub
+        if (langFamily === 'vi') {
+            cardTitle = "Vietnamese Language";
+            cardAction = `#/hub/vi`;
+            // Maybe aggregate count if multiple VI topics exist?
+            // For now, simple.
+            totalCount = 0; // Or just hide count? 
+            // Let's count all VI cards
+            Object.values(DATA_STORE).filter(t => t.lang.startsWith('vi')).forEach(t => {
+                totalCount += t.categories.reduce((acc, cat) => acc + cat.items.length, 0);
+            });
+        }
 
         const card = document.createElement('div');
         // Clean card classes
@@ -401,16 +488,17 @@ function renderLanguageMenu() {
         card.style.cursor = 'pointer';
         card.innerHTML = `
             <div style="width: 100%; text-align: center; padding: 1rem;">
-                <h3 style="margin-bottom: 0.5rem; font-size: 1.5rem;">${topic.title}</h3>
-                <span class="badge">${totalCards} words</span>
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.5rem;">${cardTitle}</h3>
+                <span class="badge">${totalCount} words</span>
             </div>
         `;
 
         card.addEventListener('click', () => {
-            window.location.hash = `#/menu/${key}`;
+            window.location.hash = cardAction;
         });
 
         elements.topicList.appendChild(card);
+        processedLangs.add(langFamily);
     });
 }
 
@@ -426,7 +514,7 @@ function renderCategoryMenu(topicId) {
 
     // FIX: Push Main Title down to avoid overlapping with fixed buttons (User Req)
     if (elements.homeTitle) {
-        elements.homeTitle.style.marginTop = '4rem';
+        elements.homeTitle.style.marginTop = '1rem';
     }
 
     // 1. Reset Container Styles (Mental Model: "Scrollable Wrapper")
@@ -442,8 +530,8 @@ function renderCategoryMenu(topicId) {
     // 2. Add Header (Directly to block container)
     // Header Container (Flex Centered)
     const header = document.createElement('div');
-    // Fix Header Overlap (v1.3.21)
-    header.style.cssText = 'position: relative; display: flex; justify-content: center; align-items: center; width: 100%; min-height: 4rem; margin-bottom: 2rem; padding-top: 4rem;';
+    // Fix Header Overlap (v1.3.21) -> Reduced spacing (v1.3.41)
+    header.style.cssText = 'position: relative; display: flex; justify-content: center; align-items: center; width: 100%; min-height: 4rem; margin-bottom: 2rem; padding-top: 1rem;';
 
     header.innerHTML = `
         <button id="menu-back-btn" class="btn-menu" style="position: fixed; top: 1rem; left: 1rem; z-index: 50;">
@@ -468,9 +556,14 @@ function renderCategoryMenu(topicId) {
     elements.topicList.appendChild(gridContainer);
 
     header.querySelector('#menu-back-btn').addEventListener('click', () => {
-        const instruction = document.querySelector('#home-screen p');
-        if (instruction) instruction.style.display = 'block';
-        window.location.hash = '#/';
+        // Hub Navigation Logic
+        if (topic.lang === 'vi-VN') {
+            window.location.hash = '#/hub/vi';
+        } else {
+            const instruction = document.querySelector('#home-screen p');
+            if (instruction) instruction.style.display = 'block';
+            window.location.hash = '#/';
+        }
     });
 
     const rulesBtn = header.querySelector('#menu-rules-btn');
@@ -512,7 +605,8 @@ function renderCategoryMenu(topicId) {
     });
 
     // Special Cards (Infinite Mode & Rules)
-    if (topic.lang === 'vi-VN') {
+    // FIX: Only show for Numbers topic (v1.3.41)
+    if (topicId === 'vietnamese-numbers') {
         // 4 Levels of Infinite Mode
         const addInfCard = (title, mode, color) => {
             const c = document.createElement('div');
@@ -552,7 +646,7 @@ function renderCategoryMenu(topicId) {
         calcCard.addEventListener('click', () => { window.location.hash = `#/calculator/${topicId}`; });
         gridContainer.appendChild(calcCard);
 
-    } else {
+    } else if (topic.lang !== 'vi-VN') { // Fallback for Korean, etc (SKIP for Vietnamese Market)
         // Korean Infinite Mode (Fallback)
         const infCard = document.createElement('div');
         infCard.className = 'topic-card';
@@ -571,6 +665,95 @@ function renderCategoryMenu(topicId) {
         });
         gridContainer.appendChild(infCard);
     }
+}
+
+// Vietnamese Language Hub
+function renderVietnameseHub() {
+    // Hide default instruction
+    const instruction = document.querySelector('#home-screen p');
+    if (instruction) instruction.style.display = 'none';
+    window.scrollTo(0, 0);
+
+    // FIX: Push Main Title down
+    if (elements.homeTitle) elements.homeTitle.style.marginTop = '1rem';
+
+    // Reset container
+    elements.topicList.removeAttribute('style');
+    elements.topicList.innerHTML = '';
+    elements.topicList.style.display = 'block';
+
+    // Header
+    const header = document.createElement('div');
+    header.style.cssText = 'position: relative; display: flex; justify-content: center; align-items: center; width: 100%; min-height: 4rem; margin-bottom: 2rem; padding-top: 1rem;';
+    header.innerHTML = `
+        <button id="hub-back-btn" class="btn-menu" style="position: fixed; top: 1rem; left: 1rem; z-index: 50;">
+             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+             </svg>
+             Back
+        </button>
+        <h2 style="margin: 0; margin-top: 1rem; text-align: center; width: 100%; font-size: 1.5rem; padding: 0 1rem;">Vietnamese Language</h2>
+    `;
+    elements.topicList.appendChild(header);
+
+    // Grid
+    const gridContainer = document.createElement('div');
+    gridContainer.className = 'topic-grid';
+    elements.topicList.appendChild(gridContainer);
+
+    // Back Logic
+    header.querySelector('#hub-back-btn').addEventListener('click', () => {
+        instruction.style.display = 'block';
+        window.location.hash = '#/';
+    });
+
+    // Card A: Numbers Master
+    const numbersCard = document.createElement('div');
+    numbersCard.className = 'topic-card w-full';
+    numbersCard.style.cursor = 'pointer';
+    numbersCard.innerHTML = `
+        <div style="width: 100%; text-align: center; padding: 1rem;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔢</div>
+            <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem;">Numbers Master</h3>
+            <span class="badge">Learn & Calculator</span>
+        </div>
+    `;
+    numbersCard.addEventListener('click', () => {
+        window.location.hash = '#/menu/vietnamese-numbers';
+    });
+    gridContainer.appendChild(numbersCard);
+
+    // Card B: Market & Shopping
+    const marketCard = document.createElement('div');
+    marketCard.className = 'topic-card w-full';
+    marketCard.style.cursor = 'pointer';
+    marketCard.innerHTML = `
+        <div style="width: 100%; text-align: center; padding: 1rem;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🛍️</div>
+            <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem;">Market & Shopping</h3>
+            <span class="badge">Basics</span>
+        </div>
+    `;
+    marketCard.addEventListener('click', () => {
+        window.location.hash = '#/menu/vietnamese-market';
+    });
+    gridContainer.appendChild(marketCard);
+
+    // Card C: Basics
+    const basicsCard = document.createElement('div');
+    basicsCard.className = 'topic-card w-full';
+    basicsCard.style.cursor = 'pointer';
+    basicsCard.innerHTML = `
+        <div style="width: 100%; text-align: center; padding: 1rem;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">👋</div>
+            <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem;">Basics</h3>
+            <span class="badge">Essential Phrases</span>
+        </div>
+    `;
+    basicsCard.addEventListener('click', () => {
+        window.location.hash = '#/menu/vietnamese-basics';
+    });
+    gridContainer.appendChild(basicsCard);
 }
 
 function setupEventListeners() {
@@ -650,38 +833,17 @@ function setupEventListeners() {
                 const lang = DATA_STORE[currentState.topicId].lang.split('-')[0];
                 speak(currentState.infiniteNum.toString(), lang);
             } else if (currentState.items.length > 0) {
+                // FIXED: item is now safely defined here
                 const item = currentState.items[currentState.currentIndex];
                 const lang = DATA_STORE[currentState.topicId].lang.split('-')[0];
 
-                // Determine text to speak based on category/logic
-                // For 0-10: id 1->0, id 11->10. (id-1)
-                // For Tens: id 21->20. (id-1)
-                // For 21-99: id 101->21? No, I gave them random IDs 101, 105. 
-                // I need to parse the TERM for the number? Or store value?
-                // Actually the `speak` function expects a number text '21', '20', '5', etc.
-                // My items have `term` which is text string.
-                // I should probably map the ID to the number CAREFULLY or just store a `value` field.
-                // QUICK FIX: For "Numbers 21-99", the ID does not map cleanly. 
-                // But the items I added: 21 (Twenty-one). 
-                // I will assume for now I will extract number from Translation if it's digit? No.
-                // Let's rely on a lookup or parse.
-                // Wait, for 21-99, `item.term` is "Hai mươi mốt". 
-                // I need to pass '21' to speak().
-                // I'll add a `value` property to the new items effectively? 
-                // Or I can deduce it. "Thirty-four" -> 34? 
-                // Simpler: The `speak` call in `app.js` is currently `speak((item.id - 1).toString(), lang)`.
-                // This logic is fragile. 
-                // For IDs 101, 105 etc this breaks.
-                // I'll update the items to include a `value` property or similar, OR change logic.
-                // BETTER: Add `val` property to ALL items in `DATA_STORE` and use that.
-                // BUT I can't update all items easily right now without huge replace.
-                // ALTERNATIVE: Use `translation` if it's digits? No.
-                // ALTERNATIVE: Just pass the known number for the new items.
-                // I will add `val: 21` etc to the new items in step 1.
-                // And update the speak call to use `item.val || (item.id - 1)`.
-                // REVISION TO STEP 1 CHUNKS NEEDED? YES. 
-                // I will use `val` in the new items.
+                // Override: Custom Audio Key
+                if (item.audio) {
+                    speak(item.term, lang, item.audio); // Pass Term for TTS Fallback, Audio for MP3
+                    return;
+                }
 
+                // Default Logic (Numbers)
                 let val = item.val;
                 if (val === undefined) val = item.id - 1;
 
@@ -780,6 +942,16 @@ function setupEventListeners() {
         });
     }
 
+    if (elements.quizBackBtn) {
+        elements.quizBackBtn.addEventListener('click', () => {
+            if (currentState.topicId) {
+                window.location.hash = `#/menu/${currentState.topicId}`;
+            } else {
+                goHome();
+            }
+        });
+    }
+
     if (elements.quizSubmitBtn) {
         elements.quizSubmitBtn.addEventListener('click', () => {
             const userVal = elements.quizDisplay.textContent.trim();
@@ -851,6 +1023,9 @@ function handleRoute() {
         } else {
             window.location.hash = '#/';
         }
+    } else if (hash === '#/hub/vi') {
+        showHomeScreen();
+        renderVietnameseHub();
     } else if (hash.startsWith('#/learn/')) {
         const parts = hash.replace('#/learn/', '').split('/');
         const topicId = parts[0];
@@ -993,67 +1168,211 @@ function startQuiz(topicId, catIndex) {
     }, 300);
 }
 
-// New Quiz Mode Logic (Keypad)
+// New Quiz Mode Logic (Keypad vs Multiple Choice)
 function renderQuizMode(playAudio = true) {
-    // 0. RESET STATE (Fix for stuck button v1.3.32)
-    if (elements.quizSubmitBtn) {
-        elements.quizSubmitBtn.disabled = false;
-        // Optional: Reset opacity/style if custom classes are used for disabled state
-    }
+    // 0. RESET STATE
+    if (elements.quizSubmitBtn) elements.quizSubmitBtn.disabled = false;
 
     // 1. Setup UI
     const topic = DATA_STORE[currentState.topicId];
     const cat = topic.categories[currentState.catIndex];
+    const item = currentState.items[currentState.currentIndex];
 
+    // Update Header
     if (elements.quizTitle) elements.quizTitle.textContent = `Quiz: ${cat.name}`;
 
-    // Stats Update
-    if (elements.quizStats) {
-        elements.quizStats.textContent = `Progress: ${currentState.quiz.correctCount} / ${cat.items.length}`;
-    }
-
-    // Reset Display
-    if (elements.quizDisplay) {
-        elements.quizDisplay.textContent = '';
-        elements.quizDisplay.classList.remove('text-correct', 'text-wrong');
-        elements.quizDisplay.style.borderColor = ''; // Reset inline border
-    }
-
-    // Layout & Scrolling Fixes (v1.3.19)
+    // Layout Fixes
     if (elements.quizContainer) {
         elements.quizContainer.style.paddingBottom = '8rem';
-        elements.quizContainer.style.justifyContent = 'flex-start'; // Align top
-        // Removed specific overflow/minHeight here to let parent .screen handle scrolling
+        elements.quizContainer.style.justifyContent = 'flex-start';
     }
 
-    // Compactness Overrides (JS-side to ensure precedence/logic)
-    if (elements.quizPlayBtn) {
-        // Reduce from default CSS if needed, but CSS is better. 
-        // User asked to "Reduce size... to w-16 h-16" (64px)
-        // I will rely on CSS update for this, but I can enforce here if needed.
+    // Determine Mode: Numeric (Keypad) or Word (Multiple Choice)
+    const isNumericQuiz = currentState.topicId.includes('numbers');
+
+    elements.quizDisplay.textContent = '?';
+    elements.quizDisplay.classList.remove('text-correct', 'text-wrong');
+    elements.quizDisplay.style.borderColor = '#334155';
+
+    // v1.3.49: Display Vietnamese Term (Topic) instead of '?' for Words
+    // This allows "Read & Listen" mode for Basics/Market
+    if (!isNumericQuiz) {
+        elements.quizDisplay.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <span style="font-size: 2.25rem; color: #f8fafc; font-weight: 700; text-align: center; line-height: 1.2;">${item.term}</span>
+                ${item.transcription ? `<span id="quiz-transcription" style="font-size: 1.1rem; color: #94a3b8; margin-top: 0.5rem; font-family: monospace;">${item.transcription}</span>` : ''}
+            </div>
+        `;
+    } else {
+        elements.quizDisplay.innerHTML = '<span style="font-size: 3rem; color: #94a3b8;">?</span>';
     }
 
-    // 2. Play Audio for Current Item
+    if (elements.quizProgress) {
+        elements.quizProgress.textContent = `${currentState.currentIndex + 1} / ${currentState.items.length}`;
+    }
+
+    // Toggle UI Elements based on Mode
+    let dynContainer = document.getElementById('quiz-dynamic-container');
+
+    if (isNumericQuiz) {
+        // --- NUMERIC MODE (Keypad) ---
+
+        // 1. Show Keypad & Submit
+        if (elements.quizKeypad) elements.quizKeypad.style.display = 'grid';
+        if (elements.quizSubmitBtn) elements.quizSubmitBtn.style.display = 'block';
+
+        // 2. Hide/Clear Multiple Choice Container
+        if (dynContainer) dynContainer.innerHTML = '';
+
+        // 3. Reset Display Input logic (handled by keypad listener)
+
+    } else {
+        // --- MULTIPLE CHOICE MODE ---
+
+        // 1. Hide Keypad & Submit
+        if (elements.quizKeypad) elements.quizKeypad.style.display = 'none';
+        if (elements.quizSubmitBtn) elements.quizSubmitBtn.style.display = 'none';
+
+        // 2. Prepare Dynamic Container for Buttons
+        if (!dynContainer) {
+            dynContainer = document.createElement('div');
+            dynContainer.id = 'quiz-dynamic-container';
+            dynContainer.style.width = '100%';
+            // Insert it where keypad usually is (after display)
+            // elements.quizDisplay is in main... parentElement is .quiz-container
+            // We want it after quizDisplay
+            elements.quizDisplay.parentElement.insertBefore(dynContainer, elements.quizKeypad);
+        }
+        dynContainer.innerHTML = ''; // Clear previous buttons
+
+        // 3. Generate Options
+        const optionsContainer = document.createElement('div');
+        optionsContainer.className = 'quiz-options-grid';
+        optionsContainer.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; margin-top: 1rem; margin-bottom: 4rem;';
+
+        const correctAnswer = item.translation;
+        const allTranslations = currentState.items.map(i => i.translation);
+
+        // Filter out correct answer to get distractors
+        const otherOptions = allTranslations.filter(t => t !== correctAnswer);
+
+        // If we don't have enough distractors (e.g. only 2 items in category), handle gracefully
+        // But for Basics (12 items) and Market (12 items) it is fine.
+        const distractors = otherOptions.sort(() => 0.5 - Math.random()).slice(0, 3);
+
+        const options = [correctAnswer, ...distractors].sort(() => 0.5 - Math.random());
+
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            // Style: Large, Deep Slate (btn-secondary-like but customised)
+            btn.className = 'btn-secondary';
+            btn.textContent = opt;
+            // Enhanced Styling for Pixel 7 touch targets
+            btn.style.cssText = `
+                padding: 1rem; 
+                font-size: 1rem; 
+                min-height: 5rem; 
+                word-break: break-word;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                background-color: #1e293b; 
+                border: 1px solid #334155;
+                color: #f8fafc;
+                border-radius: 0.5rem;
+                transition: all 0.2s;
+            `;
+
+            btn.onclick = () => handleMultipleChoiceAnswer(opt, correctAnswer, btn, optionsContainer);
+            optionsContainer.appendChild(btn);
+        });
+
+        dynContainer.appendChild(optionsContainer);
+    }
+
     if (playAudio) {
-        // Delay audio slightly to ensure UI is ready and prevent "interrupted" error
         setTimeout(() => {
             playCurrentQuizAudio();
-        }, 100);
+        }, 500);
     }
 }
+
+function handleMultipleChoiceAnswer(selected, correct, btnElement, container) {
+    // 1. Disable all buttons immediately
+    const allBtns = container.querySelectorAll('button');
+    allBtns.forEach(b => {
+        b.disabled = true;
+        b.style.cursor = 'default';
+        b.style.transform = 'none'; // stop any hover effects
+        b.style.opacity = '0.9';
+    });
+
+    const isCorrect = selected === correct;
+
+    if (isCorrect) {
+        // User picked CORRECT -> Green
+        btnElement.style.background = '#22c55e'; // Green-500
+        btnElement.style.borderColor = '#4ade80';
+        btnElement.style.color = '#ffffff';
+
+        currentState.quiz.correctCount++;
+        elements.quizDisplay.textContent = "✅";
+        elements.quizDisplay.classList.add('text-correct');
+        elements.quizDisplay.style.borderColor = '#4ade80';
+    } else {
+        // User picked WRONG -> Red
+        btnElement.style.background = '#ef4444'; // Red-500
+        btnElement.style.borderColor = '#fca5a5';
+        btnElement.style.color = '#ffffff';
+
+        // IMMEDIATELY Highlight Correct One -> Green
+        allBtns.forEach(b => {
+            if (b.textContent === correct) {
+                b.style.background = '#22c55e'; // Green-500
+                b.style.borderColor = '#4ade80';
+                b.style.color = '#ffffff';
+                b.style.boxShadow = '0 0 15px rgba(34, 197, 94, 0.4)'; // Subtle glow for emphasis
+                b.style.border = '2px solid #ffffff';
+            }
+        });
+
+        elements.quizDisplay.textContent = "❌";
+        elements.quizDisplay.classList.add('text-wrong');
+        elements.quizDisplay.style.borderColor = '#f87171';
+    }
+
+    // Delay & Next
+    const delay = isCorrect ? 1500 : 2500;
+    setTimeout(() => {
+        currentState.currentIndex++;
+
+        if (currentState.currentIndex >= currentState.items.length) {
+            showQuizVictory();
+        } else {
+            renderQuizMode(true);
+        }
+    }, delay);
+}
+
+
+
 
 function playCurrentQuizAudio() {
     const item = currentState.items[currentState.currentIndex];
     const lang = DATA_STORE[currentState.topicId].lang.split('-')[0];
 
-    // Determine Value
-    let val = item.val;
-    if (val === undefined) val = item.id - 1; // Fallback for 0-10, Tens
-
-    // Special handling for "Tens" if ID logic holds: 21->20.
-    // If we rely on IDs for Tens (21,31..), (21-1)=20. Correct.
-
-    speak(val.toString(), lang);
+    // v1.3.44: Support Audio Overrides (Market/Basics) in Quiz
+    if (item.audio) {
+        speak(item.term, lang, item.audio);
+    } else {
+        // Determine Value for Numbers
+        let val = item.val;
+        if (val === undefined) val = item.id - 1; // Fallback for 0-10, Tens
+        // Special handling for "Tens" if ID logic holds: 21->20.
+        // If we rely on IDs for Tens (21,31..), (21-1)=20. Correct.
+        speak(val.toString(), lang);
+    }
 }
 
 function nextQuizItem() {
@@ -1224,9 +1543,15 @@ function updateCardUI() {
     if (window.speechTimeout) clearTimeout(window.speechTimeout);
     window.speechTimeout = setTimeout(() => {
         const lang = DATA_STORE[currentState.topicId].lang.split('-')[0];
-        let val = item.val;
-        if (val === undefined) val = item.id - 1;
-        speak(val.toString(), lang);
+
+        // v1.3.42: Check for Audio Override (Market Mode)
+        if (item.audio) {
+            speak(item.term, lang, item.audio);
+        } else {
+            let val = item.val;
+            if (val === undefined) val = item.id - 1;
+            speak(val.toString(), lang);
+        }
     }, 40);
 }
 
