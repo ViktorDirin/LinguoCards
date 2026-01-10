@@ -48,6 +48,11 @@ body {
     display: flex;
     flex-direction: column;
     padding: 1rem;
+    overflow-y: auto;
+    /* Enable Scrolling */
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scroll */
 }
 
 .screen.active {
@@ -235,6 +240,11 @@ button:disabled {
     display: none;
     opacity: 0;
     pointer-events: none;
+}
+
+/* Global Hidden Utility */
+.hidden {
+    display: none !important;
 }
 
 .modal-content {
@@ -527,4 +537,106 @@ header {
 .btn-action.secondary:hover {
     background-color: rgba(255, 255, 255, 0.2);
     color: var(--text-color);
+}
+
+/* Quiz Mode Keypad UI - Compact (v1.3.19) */
+.quiz-display {
+    width: 100%;
+    max-width: 320px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 2px solid #334155;
+    border-radius: 12px;
+    padding: 1rem;
+    /* Compact padding */
+    margin: 1rem 0;
+    /* Compact margin */
+    text-align: center;
+    font-size: 2.25rem;
+    /* Slightly smaller font */
+    font-family: monospace;
+    font-weight: 700;
+    color: var(--accent-color);
+    min-height: 60px;
+    /* Reduced specific height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.quiz-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    /* Tighter gap */
+    width: 100%;
+    max-width: 320px;
+    margin-bottom: 1.5rem;
+    /* Reduced margin */
+}
+
+.keypad-btn {
+    background-color: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+    padding: 0.75rem 0;
+    /* Reduced padding (not excessively tall) */
+    cursor: pointer;
+    transition: all 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.keypad-btn:active {
+    transform: scale(0.95);
+    background-color: var(--accent-color);
+    color: #0f172a;
+}
+
+.keypad-btn.action {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+}
+
+.quiz-sound-trigger {
+    background: rgba(56, 189, 248, 0.1);
+    border: 2px solid var(--accent-color);
+    color: var(--accent-color);
+    width: 64px;
+    /* Reduced: w-16 */
+    height: 64px;
+    /* Reduced: h-16 */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    /* Specific font size for icon */
+    cursor: pointer;
+    transition: all 0.2s;
+    margin: 0 auto;
+}
+
+.quiz-sound-trigger:hover {
+    transform: scale(1.05);
+    background: rgba(56, 189, 248, 0.2);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+}
+
+.quiz-sound-trigger:active {
+    transform: scale(0.95);
+}
+
+/* Ensure Submit button is styled if not covered by btn-primary utility or needs explicit sizing */
+#quiz-submit-btn {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+    border-radius: 12px;
+    /* Consistency */
 }

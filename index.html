@@ -10,26 +10,31 @@
     <style>
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 10px;
         }
 
         ::-webkit-scrollbar-track {
-            background: #1a1a1a;
+            background: #0f172a;
+            /* Main BG */
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #4a4a4a;
+            background: #334155;
+            /* Slate 700 */
+            border: 2px solid #0f172a;
+            /* Padding effect */
             border-radius: 10px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #3b82f6;
+            background: #475569;
+            /* Slate 600 */
         }
 
         /* Firefox */
         * {
             scrollbar-width: thin;
-            scrollbar-color: #4a4a4a #1a1a1a;
+            scrollbar-color: #334155 #0f172a;
         }
     </style>
 </head>
@@ -72,7 +77,7 @@
 
                         <div class="version-info"
                             style="text-align: center; margin-bottom: 1.5rem; color: #64748b; font-size: 0.8rem;">
-                            v1.3.17
+                            v1.3.36
                         </div>
 
                         <!-- Close Button -->
@@ -140,7 +145,8 @@
 
         <!-- Learning Screen -->
         <div id="learning-screen" class="screen">
-            <header style="display: flex; justify-content: center; align-items: center; width: 100%; height: 4rem;">
+            <header
+                style="display: flex; justify-content: center; align-items: center; width: 100%; min-height: 4rem; padding-top: 4rem; margin-bottom: 1rem;">
                 <button id="back-home-btn" class="btn-menu"
                     style="position: fixed; top: 1rem; left: 1rem; z-index: 50;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -167,6 +173,22 @@
                             <span class="translation-large" id="card-translation">One</span>
                         </div>
                     </div>
+                    <!-- Victory Overlay -->
+                    <div id="quiz-victory-overlay" class="hidden"
+                        style="position: fixed; inset: 0; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100;">
+                        <h2 style="font-size: 2.5rem; color: #4ade80; margin-bottom: 0.5rem; font-weight: bold;">Rất
+                            tốt!</h2>
+                        <p style="font-size: 1.25rem; color: #38bdf8; margin-bottom: 2rem;">(Very good!)</p>
+
+                        <h3 class="term-large" style="color: #e2e8f0; margin-bottom: 1rem; font-size: 1.5rem;">Quiz
+                            Complete!</h3>
+                        <p id="quiz-final-score" style="color: #94a3b8; font-size: 1.1rem; margin-bottom: 2rem;">Result:
+                            0/0</p>
+
+                        <button id="quiz-retry-btn" class="btn-primary" style="width: 200px; margin-bottom: 1rem;">Play
+                            Again</button>
+                        <button id="quiz-exit-btn" class="btn-secondary" style="width: 200px;">Back to Menu</button>
+                    </div>
                 </div>
             </main>
 
@@ -178,19 +200,101 @@
 
         <!-- Quiz Screen -->
         <div id="quiz-screen" class="screen">
-            <header>
-                <button id="quiz-back-btn" class="btn-text">← Exit Quiz</button>
-                <span id="quiz-progress">Question 1/10</span>
+            <header
+                style="position: relative; padding-top: 4rem; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
+                <button id="quiz-back-btn" class="btn-text"
+                    style="position: absolute; top: 1rem; left: 1rem; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; z-index: 10;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    Back to Menu
+                </button>
+                <h2 id="quiz-header-title"
+                    style="margin: 0; font-size: 1.5rem; color: #e2e8f0; width: 100%; text-align: center; padding: 0 1rem;">
+                    Quiz</h2>
             </header>
 
-            <main class="quiz-container">
-                <div class="question-area">
-                    <h2 id="quiz-question" class="term-large">Question</h2>
+            <main class="quiz-container" style="justify-content: flex-start; padding-top: 1rem;">
+                <!-- Audio Trigger -->
+                <button id="quiz-play-btn" class="quiz-sound-trigger">
+                    🔊
+                </button>
+
+                <p style="margin-top: 1rem; color: #64748b; font-size: 0.9rem;">Listen and type the number</p>
+
+                <!-- Display -->
+                <div id="quiz-input-display" class="quiz-display"></div>
+
+                <!-- Keypad -->
+                <div id="quiz-keypad" class="quiz-keypad">
+                    <button class="keypad-btn" data-key="1">1</button>
+                    <button class="keypad-btn" data-key="2">2</button>
+                    <button class="keypad-btn" data-key="3">3</button>
+                    <button class="keypad-btn" data-key="4">4</button>
+                    <button class="keypad-btn" data-key="5">5</button>
+                    <button class="keypad-btn" data-key="6">6</button>
+                    <button class="keypad-btn" data-key="7">7</button>
+                    <button class="keypad-btn" data-key="8">8</button>
+                    <button class="keypad-btn" data-key="9">9</button>
+                    <button class="keypad-btn action" data-key="clear">C</button>
+                    <button class="keypad-btn" data-key="0">0</button>
+                    <button class="keypad-btn action" data-key="back">⌫</button>
                 </div>
 
-                <div id="quiz-options" class="options-grid">
-                    <!-- Options will be injected here -->
+                <button id="quiz-submit-btn" class="btn-primary" style="width: 100%; max-width: 320px;">Submit
+                    Answer</button>
+            </main>
+        </div>
+
+        <!-- Calculator Screen -->
+        <div id="calculator-screen" class="screen">
+            <header
+                style="position: relative; padding-top: 4rem; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
+                <button id="calc-back-btn" class="btn-text"
+                    style="position: absolute; top: 1rem; left: 1rem; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; z-index: 10;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    Back to Menu
+                </button>
+                <h2 id="calc-header-title"
+                    style="margin: 0; font-size: 1.5rem; color: #e2e8f0; width: 100%; text-align: center; padding: 0 1rem;">
+                    Number Calculator</h2>
+            </header>
+
+            <main class="quiz-container" style="justify-content: flex-start; padding-top: 1rem;">
+                <p style="margin-top: 1rem; color: #64748b; font-size: 0.9rem;">Type any number to hear it in Vietnamese
+                </p>
+                <div id="calculator-transcription"
+                    class="text-xl text-blue-400 font-semibold min-h-[1.5rem] text-center mt-2 px-4 transition-all duration-300"
+                    style="font-size: 1.25rem; color: #60a5fa; font-weight: 600; min-height: 1.5rem; text-align: center; margin-top: 0.5rem; padding: 0 1rem; transition: all 0.3s ease; word-break: break-word;">
                 </div>
+
+                <!-- Display -->
+                <div id="calc-input-display" class="quiz-display" style="border-color: #38bdf8;"></div>
+
+                <!-- Keypad -->
+                <div id="calc-keypad" class="quiz-keypad">
+                    <button class="keypad-btn" data-key="1">1</button>
+                    <button class="keypad-btn" data-key="2">2</button>
+                    <button class="keypad-btn" data-key="3">3</button>
+                    <button class="keypad-btn" data-key="4">4</button>
+                    <button class="keypad-btn" data-key="5">5</button>
+                    <button class="keypad-btn" data-key="6">6</button>
+                    <button class="keypad-btn" data-key="7">7</button>
+                    <button class="keypad-btn" data-key="8">8</button>
+                    <button class="keypad-btn" data-key="9">9</button>
+                    <button class="keypad-btn action" data-key="clear">C</button>
+                    <button class="keypad-btn" data-key="0">0</button>
+                    <button class="keypad-btn action" data-key="back">⌫</button>
+                </div>
+
+                <button id="calc-speak-btn" class="btn-primary"
+                    style="width: 100%; max-width: 320px; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <span style="font-size: 1.25rem;">🔊</span> Speak
+                </button>
             </main>
         </div>
     </div>

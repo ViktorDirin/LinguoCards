@@ -1,4 +1,4 @@
-const CACHE_NAME = 'linguocards-v1.3.17';
+const CACHE_NAME = 'linguocards-v1.3.36';
 const ASSETS = [
     './',
     './index.html',

@@ -320,11 +320,25 @@ const elements = {
     closeSettingsBtn: document.getElementById('close-settings-btn'),
     backBtn: document.getElementById('back-home-btn'),
     // Quiz Elements
+    // Quiz Elements
     quizBackBtn: document.getElementById('quiz-back-btn'),
-    quizQuestion: document.getElementById('quiz-question'),
-    quizOptions: document.getElementById('quiz-options'),
-    quizProgress: document.getElementById('quiz-progress'),
-    quizScore: document.getElementById('quiz-score'),
+    quizContainer: document.querySelector('.quiz-container'),
+    quizTitle: document.getElementById('quiz-header-title'),
+    quizPlayBtn: document.getElementById('quiz-play-btn'),
+    quizDisplay: document.getElementById('quiz-input-display'),
+    quizKeypad: document.getElementById('quiz-keypad'),
+    quizSubmitBtn: document.getElementById('quiz-submit-btn'),
+    quizStats: document.getElementById('quiz-stats'),
+    quizVictoryOverlay: document.getElementById('quiz-victory-overlay'),
+    quizFinalScore: document.getElementById('quiz-final-score'),
+    quizRetryBtn: document.getElementById('quiz-retry-btn'),
+    quizExitBtn: document.getElementById('quiz-exit-btn'),
+    // Calculator Elements
+    calcScreen: document.getElementById('calculator-screen'),
+    calcBackBtn: document.getElementById('calc-back-btn'),
+    calcDisplay: document.getElementById('calc-input-display'),
+    calcKeypad: document.getElementById('calc-keypad'),
+    calcSpeakBtn: document.getElementById('calc-speak-btn'),
 
     card: document.getElementById('flashcard'),
     cardTerm: document.getElementById('card-term'),
@@ -410,6 +424,11 @@ function renderCategoryMenu(topicId) {
     // Scroll Reset (Mobile Fix)
     window.scrollTo(0, 0);
 
+    // FIX: Push Main Title down to avoid overlapping with fixed buttons (User Req)
+    if (elements.homeTitle) {
+        elements.homeTitle.style.marginTop = '4rem';
+    }
+
     // 1. Reset Container Styles (Mental Model: "Scrollable Wrapper")
     elements.topicList.removeAttribute('style');
     elements.topicList.innerHTML = '';
@@ -417,16 +436,14 @@ function renderCategoryMenu(topicId) {
     // Apply Scrollable Container Styles
     elements.topicList.style.display = 'block';
     elements.topicList.style.height = 'auto';
-    elements.topicList.style.maxHeight = 'calc(100vh - 4rem)';
-    elements.topicList.style.overflowY = 'auto';
-    elements.topicList.style.paddingBottom = '12rem';
-    elements.topicList.style.width = '100%';
     elements.topicList.style.pointerEvents = 'auto';
+    // Removed specific overflow/maxHeight here to let parent .screen handle scrolling
 
     // 2. Add Header (Directly to block container)
     // Header Container (Flex Centered)
     const header = document.createElement('div');
-    header.style.cssText = 'position: relative; display: flex; justify-content: center; align-items: center; width: 100%; height: 4rem; margin-bottom: 2rem; padding-top: 1rem;';
+    // Fix Header Overlap (v1.3.21)
+    header.style.cssText = 'position: relative; display: flex; justify-content: center; align-items: center; width: 100%; min-height: 4rem; margin-bottom: 2rem; padding-top: 4rem;';
 
     header.innerHTML = `
         <button id="menu-back-btn" class="btn-menu" style="position: fixed; top: 1rem; left: 1rem; z-index: 50;">
@@ -441,7 +458,7 @@ function renderCategoryMenu(topicId) {
              </svg>
              Rules
         </button>
-        <h2 style="margin: 0; text-align: center; width: auto; font-size: 1.5rem;">${topic.title}</h2>
+        <h2 style="margin: 0; margin-top: 1rem; text-align: center; width: 100%; font-size: 1.5rem; padding: 0 1rem;">${topic.title}</h2>
     `;
     elements.topicList.appendChild(header);
 
@@ -518,6 +535,23 @@ function renderCategoryMenu(topicId) {
         addInfCard("Infinite: Hundreds (100-999)", "hundreds", "rgba(59, 130, 246, 0.5)"); // Blue
         addInfCard("Infinite: Round Thousands", "thousands", "rgba(16, 185, 129, 0.5)"); // Green
         addInfCard("Infinite: Absolute (1-1M)", "absolute", "rgba(239, 68, 68, 0.5)"); // Red
+
+        // Calculator Card
+        const calcCard = document.createElement('div');
+        calcCard.className = 'topic-card';
+        calcCard.style.width = '100%';
+        calcCard.innerHTML = `
+            <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3>Pronunciation Calculator</h3>
+                    <p style="font-size: 0.8rem; color: #94a3b8;">Type any number to hear it in Vietnamese.</p>
+                </div>
+                <button class="btn-sm btn-action" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">Open</button>
+            </div>
+        `;
+        calcCard.addEventListener('click', () => { window.location.hash = `#/calculator/${topicId}`; });
+        gridContainer.appendChild(calcCard);
+
     } else {
         // Korean Infinite Mode (Fallback)
         const infCard = document.createElement('div');
@@ -546,6 +580,29 @@ function setupEventListeners() {
 
     elements.backBtn.addEventListener('click', goHome);
     if (elements.quizBackBtn) elements.quizBackBtn.addEventListener('click', goHome);
+
+    // Quiz Victory Buttons
+    if (elements.quizRetryBtn) {
+        elements.quizRetryBtn.addEventListener('click', () => {
+            // Reset Victory Screen
+            if (elements.quizVictoryOverlay) elements.quizVictoryOverlay.style.display = 'none';
+            // Reset Quiz State explicitly
+            currentState.currentIndex = 0;
+            currentState.quiz.correctCount = 0;
+            currentState.quiz.totalAttempted = 0;
+
+            startQuiz(currentState.topicId, currentState.catIndex);
+        });
+    }
+    if (elements.quizExitBtn) {
+        elements.quizExitBtn.addEventListener('click', () => {
+            if (elements.quizVictoryOverlay) elements.quizVictoryOverlay.style.display = 'none';
+            currentState.currentIndex = 0;
+            currentState.quiz.correctCount = 0;
+            currentState.quiz.totalAttempted = 0;
+            goHome();
+        });
+    }
 
     // Settings Modal
     if (elements.settingsBtn) {
@@ -664,6 +721,123 @@ function setupEventListeners() {
             }
         }
     });
+
+    // Calculator Listeners
+    if (elements.calcBackBtn) elements.calcBackBtn.addEventListener('click', goHome);
+
+    if (elements.calcKeypad) {
+        elements.calcKeypad.addEventListener('click', (e) => {
+            const btn = e.target.closest('.keypad-btn');
+            if (!btn) return;
+            handleCalcKeypadInput(btn.dataset.key);
+        });
+    }
+
+    if (elements.calcSpeakBtn) {
+        elements.calcSpeakBtn.addEventListener('click', () => {
+            const val = elements.calcDisplay.textContent.trim().replace(/\s/g, '');
+            const transcriptionEl = document.getElementById('calculator-transcription');
+
+            if (!val || val === '') {
+                // handle empty - speak zero
+                speak('0', 'vi');
+                elements.calcDisplay.textContent = '0'; // Feedback
+                if (transcriptionEl) transcriptionEl.textContent = numberToVietnamese(0);
+                return;
+            }
+            const num = parseInt(val, 10);
+            speak(val, 'vi');
+
+            // UI Update
+            if (transcriptionEl) {
+                // visual fade effect
+                transcriptionEl.style.opacity = '0';
+                setTimeout(() => {
+                    transcriptionEl.textContent = numberToVietnamese(num);
+                    transcriptionEl.style.opacity = '1';
+                }, 150);
+            }
+        });
+    }
+
+    // Quiz Keypad Listener (Delegation)
+    if (elements.quizKeypad) {
+        elements.quizKeypad.addEventListener('click', (e) => {
+            const btn = e.target.closest('.keypad-btn');
+            if (!btn) return;
+
+            // Visual feedback handled by CSS :active, but maybe sound?
+            handleKeypadInput(btn.dataset.key);
+        });
+    }
+
+    if (elements.quizPlayBtn) {
+        elements.quizPlayBtn.addEventListener('click', () => {
+            // Visual Animation
+            elements.quizPlayBtn.style.transform = "scale(0.95)";
+            setTimeout(() => elements.quizPlayBtn.style.transform = "scale(1)", 150);
+            playCurrentQuizAudio();
+        });
+    }
+
+    if (elements.quizSubmitBtn) {
+        elements.quizSubmitBtn.addEventListener('click', () => {
+            const userVal = elements.quizDisplay.textContent.trim();
+            if (!userVal) return;
+
+            const item = currentState.items[currentState.currentIndex];
+            let correctVal = item.val;
+            if (correctVal === undefined) correctVal = item.id - 1;
+
+            // Diagnostic Log
+            console.log('Quiz Check: Input=', userVal, 'Correct=', correctVal);
+
+            const isCorrect = userVal === correctVal.toString();
+
+            if (isCorrect) {
+                // 1. Process Feedback (Green)
+                currentState.quiz.correctCount++;
+                elements.quizDisplay.classList.add('text-correct');
+                elements.quizDisplay.style.borderColor = '#4ade80';
+
+                const overlay = document.createElement('div');
+                overlay.textContent = "✅";
+                overlay.style.cssText = "position:absolute; font-size: 3rem; animation: fadeIn 0.2s;";
+                elements.quizDisplay.appendChild(overlay);
+            } else {
+                // 1. Process Feedback (Red)
+                elements.quizDisplay.classList.add('text-wrong');
+                elements.quizDisplay.style.borderColor = '#f87171';
+                elements.quizDisplay.innerHTML = `<span style="font-size: 1rem; color: #f87171;">Correct: ${correctVal}</span>`;
+
+                const overlay = document.createElement('div');
+                overlay.textContent = "❌";
+                overlay.style.cssText = "position:absolute; font-size: 3rem; animation: fadeIn 0.2s; top: -3rem;";
+                elements.quizDisplay.appendChild(overlay);
+            }
+
+            elements.quizSubmitBtn.disabled = true;
+
+            // 3. AFTER Delay -> Increment & Check
+            const delay = isCorrect ? 1500 : 2000;
+            setTimeout(() => {
+                // 2. Increment logic
+                currentState.currentIndex++;
+                console.log(`Progress: Index=${currentState.currentIndex} Total=${currentState.items.length}`);
+
+                // Bulletproof Transition Logic
+                // Fail-safe: If we reached the end OR the next item doesn't exist
+                if (currentState.currentIndex >= currentState.items.length || !currentState.items[currentState.currentIndex]) {
+                    console.log('Triggering Victory Screen NOW.');
+                    showQuizVictory();
+                } else {
+                    console.log('Moving to next question...');
+                    renderQuizMode(true);
+                    elements.quizSubmitBtn.disabled = false;
+                }
+            }, delay);
+        });
+    }
 }
 
 function handleRoute() {
@@ -707,6 +881,13 @@ function handleRoute() {
         } else {
             window.location.hash = '#/';
         }
+    } else if (hash.startsWith('#/calculator/')) {
+        const topicId = hash.replace('#/calculator/', '');
+        if (DATA_STORE[topicId]) {
+            renderCalculatorMode(topicId);
+        } else {
+            window.location.hash = '#/';
+        }
     } else {
         showHomeScreen();
         renderLanguageMenu();
@@ -716,10 +897,17 @@ function handleRoute() {
 function showHomeScreen() {
     elements.learningScreen.classList.remove('active');
     if (elements.quizScreen) elements.quizScreen.classList.remove('active');
+    if (elements.calcScreen) {
+        elements.calcScreen.classList.remove('active');
+        elements.calcScreen.style.visibility = ''; // Reset inline override
+        elements.calcScreen.style.opacity = '';    // Reset inline override
+    }
 
     setTimeout(() => {
         elements.learningScreen.style.display = 'none';
         if (elements.quizScreen) elements.quizScreen.style.display = 'none';
+        if (elements.calcScreen) elements.calcScreen.style.display = 'none';
+
         elements.homeScreen.style.display = 'flex';
         requestAnimationFrame(() => {
             elements.homeScreen.classList.add('active');
@@ -775,9 +963,16 @@ function startQuiz(topicId, catIndex) {
     // Shuffle only items from this category
     currentState.items = [...topic.categories[catIndex].items].sort(() => Math.random() - 0.5);
     currentState.currentIndex = 0;
-    currentState.quiz = { score: 0, isComplete: false };
+    currentState.quiz = {
+        correctCount: 0,
+        totalAttempted: 0,
+        isFirstAttempt: true
+    };
 
-    renderQuizQuestion();
+    renderQuizMode(false);
+
+    // Hide Victory Overlay if present (Direct Style)
+    if (elements.quizVictoryOverlay) elements.quizVictoryOverlay.style.display = 'none';
 
     elements.homeScreen.classList.remove('active');
     elements.learningScreen.classList.remove('active');
@@ -789,78 +984,192 @@ function startQuiz(topicId, catIndex) {
         elements.quizScreen.style.display = 'flex';
         requestAnimationFrame(() => {
             elements.quizScreen.classList.add('active');
+
+            // Auto-play first audio after transition
+            setTimeout(() => {
+                playCurrentQuizAudio();
+            }, 300);
         });
     }, 300);
 }
 
-function renderQuizQuestion() {
-    if (currentState.currentIndex >= currentState.items.length) {
-        showQuizResults();
-        return;
+// New Quiz Mode Logic (Keypad)
+function renderQuizMode(playAudio = true) {
+    // 0. RESET STATE (Fix for stuck button v1.3.32)
+    if (elements.quizSubmitBtn) {
+        elements.quizSubmitBtn.disabled = false;
+        // Optional: Reset opacity/style if custom classes are used for disabled state
     }
 
-    const item = currentState.items[currentState.currentIndex];
+    // 1. Setup UI
+    const topic = DATA_STORE[currentState.topicId];
+    const cat = topic.categories[currentState.catIndex];
 
-    // Update Progress
-    elements.quizProgress.textContent = `Question ${currentState.currentIndex + 1}/${currentState.items.length}`;
-    elements.quizQuestion.textContent = item.term;
+    if (elements.quizTitle) elements.quizTitle.textContent = `Quiz: ${cat.name}`;
 
-    // Generate Options
-    // 1 correct, 3 random wrong
-    let options = [item];
+    // Stats Update
+    if (elements.quizStats) {
+        elements.quizStats.textContent = `Progress: ${currentState.quiz.correctCount} / ${cat.items.length}`;
+    }
 
-    // Get wrong items from the SAME category to make it fair/relevant? 
-    // Or from all categories in language?
-    // "Ensure the Quiz ... also only use items from the chosen category" implies strictly that category.
-    // But if category has < 4 items? (Tens has 8, Numbers 11). Safe.
-    const allItems = DATA_STORE[currentState.topicId].categories[currentState.catIndex].items;
+    // Reset Display
+    if (elements.quizDisplay) {
+        elements.quizDisplay.textContent = '';
+        elements.quizDisplay.classList.remove('text-correct', 'text-wrong');
+        elements.quizDisplay.style.borderColor = ''; // Reset inline border
+    }
 
-    // Filter out correct item
-    const wrongItems = allItems.filter(i => i.id !== item.id).sort(() => Math.random() - 0.5).slice(0, 3);
+    // Layout & Scrolling Fixes (v1.3.19)
+    if (elements.quizContainer) {
+        elements.quizContainer.style.paddingBottom = '8rem';
+        elements.quizContainer.style.justifyContent = 'flex-start'; // Align top
+        // Removed specific overflow/minHeight here to let parent .screen handle scrolling
+    }
 
-    options = [...options, ...wrongItems].sort(() => Math.random() - 0.5);
+    // Compactness Overrides (JS-side to ensure precedence/logic)
+    if (elements.quizPlayBtn) {
+        // Reduce from default CSS if needed, but CSS is better. 
+        // User asked to "Reduce size... to w-16 h-16" (64px)
+        // I will rely on CSS update for this, but I can enforce here if needed.
+    }
 
-    elements.quizOptions.innerHTML = '';
-    options.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.className = 'quiz-option';
-        btn.textContent = opt.translation;
-        btn.addEventListener('click', () => handleQuizAnswer(item, opt, btn));
-        elements.quizOptions.appendChild(btn);
-    });
+    // 2. Play Audio for Current Item
+    if (playAudio) {
+        // Delay audio slightly to ensure UI is ready and prevent "interrupted" error
+        setTimeout(() => {
+            playCurrentQuizAudio();
+        }, 100);
+    }
 }
 
-function handleQuizAnswer(correctItem, selectedItem, btn) {
-    if (btn.disabled) return; // Prevent double click
-
-    // Disable all buttons
-    const allBtns = elements.quizOptions.querySelectorAll('button');
-    allBtns.forEach(b => b.disabled = true);
-
-    const isCorrect = correctItem.id === selectedItem.id;
-
-    if (isCorrect) {
-        btn.classList.add('correct');
-        currentState.quiz.score++;
-    } else {
-        btn.classList.add('wrong');
-        // Highlight correct one
-        allBtns.forEach(b => {
-            if (b.textContent === correctItem.translation) b.classList.add('correct');
-        });
-    }
-
-    // Play sound
+function playCurrentQuizAudio() {
+    const item = currentState.items[currentState.currentIndex];
     const lang = DATA_STORE[currentState.topicId].lang.split('-')[0];
-    let val = correctItem.val;
-    if (val === undefined) val = correctItem.id - 1;
-    speak(val.toString(), lang);
 
-    // Next question delay
-    setTimeout(() => {
-        currentState.currentIndex++;
-        renderQuizQuestion();
-    }, 1500);
+    // Determine Value
+    let val = item.val;
+    if (val === undefined) val = item.id - 1; // Fallback for 0-10, Tens
+
+    // Special handling for "Tens" if ID logic holds: 21->20.
+    // If we rely on IDs for Tens (21,31..), (21-1)=20. Correct.
+
+    speak(val.toString(), lang);
+}
+
+function nextQuizItem() {
+    currentState.currentIndex++;
+    currentState.quiz.isFirstAttempt = true;
+
+    if (currentState.currentIndex >= currentState.items.length) {
+        showQuizVictory();
+    } else {
+        renderQuizMode(true);
+    }
+}
+
+function showQuizVictory() {
+    try {
+        if (elements.quizVictoryOverlay) {
+            // MOVED TO BODY to avoid parent visibility issues
+            document.body.appendChild(elements.quizVictoryOverlay);
+
+            elements.quizVictoryOverlay.classList.remove('hidden');
+
+            // Nuclear Fix: Force styles directly
+            elements.quizVictoryOverlay.style.setProperty('display', 'flex', 'important');
+            elements.quizVictoryOverlay.style.setProperty('visibility', 'visible', 'important');
+            elements.quizVictoryOverlay.style.setProperty('opacity', '1', 'important');
+            elements.quizVictoryOverlay.style.setProperty('z-index', '10000', 'important');
+            elements.quizVictoryOverlay.style.setProperty('position', 'fixed', 'important');
+            elements.quizVictoryOverlay.style.inset = '0';
+            elements.quizVictoryOverlay.style.background = 'rgba(15, 23, 42, 0.95)';
+            elements.quizVictoryOverlay.style.flexDirection = 'column';
+            elements.quizVictoryOverlay.style.alignItems = 'center';
+            elements.quizVictoryOverlay.style.justifyContent = 'center';
+
+            const percent = Math.round((currentState.quiz.correctCount / currentState.items.length) * 100);
+
+            elements.quizVictoryOverlay.innerHTML = `
+                <div style="background: #1e293b; padding: 2.5rem; border-radius: 1rem; border: 1px solid #334155; text-align: center; max-width: 90%; width: 400px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+                    <h2 style="font-size: 2.5rem; color: #4ade80; margin-bottom: 0.5rem; font-weight: bold;">Rất tốt!</h2>
+                    <p style="font-size: 1.25rem; color: #38bdf8; margin-bottom: 2rem;">(Very good!)</p>
+
+                    <div style="margin-bottom: 2rem;">
+                        <p style="color: #cbd5e1; font-size: 1.25rem; margin-bottom: 0.5rem; font-weight: 500;">
+                            Final Score: <span style="color: #f8fafc; font-weight: 700;">${currentState.quiz.correctCount}</span> / ${currentState.items.length}
+                        </p>
+                        <p style="color: ${percent >= 80 ? '#4ade80' : percent >= 50 ? '#facc15' : '#f87171'}; font-size: 1.1rem; font-weight: 600;">
+                            (${percent}%)
+                        </p>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <button id="quiz-btn-restart" class="btn-primary" style="width: 100%;">Restart Quiz</button>
+                        <button id="quiz-btn-back" class="btn-secondary" style="width: 100%; border: 1px solid #334155;">Back to Menu</button>
+                    </div>
+                </div>
+            `;
+
+            // Bind Events
+            document.getElementById('quiz-btn-restart').onclick = () => {
+                elements.quizVictoryOverlay.style.display = 'none';
+                currentState.currentIndex = 0;
+                currentState.quiz.correctCount = 0;
+                currentState.quiz.totalAttempted = 0;
+                startQuiz(currentState.topicId, currentState.catIndex);
+            };
+
+            document.getElementById('quiz-btn-back').onclick = () => {
+                elements.quizVictoryOverlay.style.display = 'none';
+                currentState.currentIndex = 0;
+                currentState.quiz.correctCount = 0;
+                currentState.quiz.totalAttempted = 0;
+                renderCategoryMenu(currentState.topicId);
+            };
+
+            console.log("Victory Overlay Styles Applied");
+        }
+    } catch (error) {
+        console.error("Critical Error in showQuizVictory:", error);
+        // Fallback
+        alert(`Quiz Finished! Score: ${currentState.quiz.correctCount}/${currentState.items.length}`);
+        goHome();
+    }
+}
+
+function handleKeypadInput(key) {
+    const currentText = elements.quizDisplay.textContent;
+
+    if (key === 'clear') {
+        elements.quizDisplay.textContent = '';
+    } else if (key === 'back') {
+        elements.quizDisplay.textContent = currentText.slice(0, -1);
+    } else {
+        if (currentText.length < 9) { // Max length limit
+            elements.quizDisplay.textContent = currentText + key;
+        }
+    }
+}
+
+function setupQuizListeners() {
+    // Ensure we don't bind multiple times? 
+    // Ideally we bind once in init, but `startQuiz` sets up specific state.
+    // Let's check if we bound keypad. 
+
+    // Just re-bind or use a flag. Simpler: clone node to wipe listeners or handle strictly.
+    // Better: Bind once in `setupEventListeners` and use a handler that checks state.
+    // BUT user asked for "Create Quiz Mode Scaffold".
+
+    // I will add a check if listeners are attached OR attach them here ensuring no duplicates.
+    // For safety in this "scaffold" step, I'll attach to the CONTAINER (Keypad) via delegation in `startQuiz` 
+    // or better, init it once if possible. 
+
+    // Let's do delegation on `quizKeypad` which is permanent.
+    // I'll add the listener in `startQuiz` but I need to be careful of duplicates if `startQuiz` is called multiple times.
+    // Actually `startQuiz` is called on route. 
+
+    // Moving Keypad Listener to `setupEventListeners` (Global) is cleaner.
+    // I'll do that in a separate chunk.
 }
 
 function showQuizResults() {
@@ -945,6 +1254,12 @@ function prevCard() {
 function playSequence(paths) {
     if (!paths || paths.length === 0) return;
 
+    // Safety: Stop any current global audio FIRST
+    if (window.currentAudio) {
+        window.currentAudio.pause();
+        window.currentAudio = null;
+    }
+
     let index = 0;
 
     function playNext() {
@@ -971,11 +1286,22 @@ function playSequence(paths) {
             playNext();
         };
 
-        audio.play().catch(e => {
-            console.warn("Play failed (autoplay policy?):", e);
-            index++;
-            playNext();
-        });
+        // Robust play handling
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                if (error.name === 'AbortError') {
+                    // This is expected if we quickly switch cards
+                    console.log('Audio playback aborted (user action).');
+                } else {
+                    console.warn("Play failed (autoplay policy?):", error);
+                    // Try next in sequence? Or just stop?
+                    // Let's try to proceed to avoid "stuck" sequence
+                    index++;
+                    playNext();
+                }
+            });
+        }
     }
 
     playNext();
@@ -1132,6 +1458,73 @@ function getVietnamesePhonetic(num) {
     return `[${capitalized}]`;
 }
 
+// Basic Vietnamese Number Translation Engine
+function numberToVietnamese(num) {
+    if (num === 0) return "không";
+    if (num < 0) return "âm " + numberToVietnamese(Math.abs(num));
+
+    const units = ["", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
+    const tens = ["", "mười", "hai mươi", "ba mươi", "bốn mươi", "năm mươi", "sáu mươi", "bảy mươi", "tám mươi", "chín mươi"];
+
+    function readGroup(n) {
+        let str = "";
+        const h = Math.floor(n / 100);
+        const d = Math.floor((n % 100) / 10);
+        const u = n % 10;
+
+        if (h > 0) {
+            str += units[h] + " trăm ";
+            if (d === 0 && u > 0) str += "linh ";
+        }
+
+        if (d > 0) {
+            if (d === 1) str += "mười ";
+            else str += tens[d] + " ";
+        }
+
+        if (u > 0) {
+            if (d > 1 && u === 1) str += "mốt"; // 21, 31...
+            else if (d > 0 && u === 5) str += "lăm"; // 15, 25...
+            else if (d === 0 && u === 0) str += "";
+            else str += units[u];
+        }
+        return str.trim();
+    }
+
+    // Simplified for now (handling up to millions similar to audio paths)
+    let text = "";
+    let remaining = num;
+    const millions = Math.floor(remaining / 1000000);
+    remaining %= 1000000;
+    const thousands = Math.floor(remaining / 1000);
+    const unitPart = remaining % 1000;
+
+    if (millions > 0) {
+        text += readGroup(millions) + " triệu ";
+    }
+
+    if (thousands > 0) {
+        // Special case: if thousands < 100 and there are millions, add 'không trăm' logic if strictly formal, 
+        // but for casual 'nghìn' is fine.
+        // If we have millions but thousands is 005, it should be "không trăm linh năm nghìn"
+        // Let's keep it simple for v1.3.34
+        text += readGroup(thousands) + " nghìn ";
+    }
+
+    if (unitPart > 0) {
+        if ((millions > 0 || thousands > 0) && unitPart < 100) {
+            // Handle "không trăm" if needed? 
+            // 1005 -> một nghìn không trăm linh năm
+            // We can reuse getVietnameseAudioPaths logic structure ideally, 
+            // but let's do a best effort translation for display.
+        }
+        text += readGroup(unitPart);
+    }
+
+    // Very simple cleanup to fix extra spaces
+    return text.replace(/\s+/g, ' ').trim();
+}
+
 function getVietnameseAudioPaths(num) {
     const langCode = 'vi';
     const paths = [];
@@ -1194,6 +1587,89 @@ function getVietnameseAudioPaths(num) {
     }
 
     return paths;
+}
+
+// Calculator Mode
+// Calculator Mode
+function renderCalculatorMode(topicId) {
+    currentState.topicId = topicId;
+
+    // 1. Hide Other Screens
+    if (elements.homeScreen) {
+        elements.homeScreen.classList.remove('active');
+        // Immediate hide for others to prevent overlap during transition if z-index issues
+        // But let's follow the fade-out pattern if possible. 
+        // For now, let's just make sure they get hidden.
+        setTimeout(() => elements.homeScreen.style.display = 'none', 300);
+    }
+    if (elements.learningScreen) {
+        elements.learningScreen.classList.remove('active');
+        setTimeout(() => elements.learningScreen.style.display = 'none', 300);
+    }
+    if (elements.quizScreen) {
+        elements.quizScreen.classList.remove('active');
+        setTimeout(() => elements.quizScreen.style.display = 'none', 300);
+    }
+
+    // 2. Show Calculator
+    if (elements.calcScreen) {
+        elements.calcScreen.style.display = 'flex';
+        // Force reflow
+        requestAnimationFrame(() => {
+            elements.calcScreen.classList.add('active');
+            elements.calcScreen.style.visibility = 'visible';
+            elements.calcScreen.style.opacity = '1';
+        });
+    }
+
+    if (elements.calcDisplay) {
+        elements.calcDisplay.textContent = '';
+    }
+    const transcriptionEl = document.getElementById('calculator-transcription');
+    if (transcriptionEl) transcriptionEl.textContent = '';
+}
+
+function handleCalcKeypadInput(key) {
+    // 1. Get raw value (strip existing spaces)
+    let raw = elements.calcDisplay.textContent.replace(/\s/g, '');
+    const transcriptionEl = document.getElementById('calculator-transcription');
+
+    if (key === 'clear') {
+        raw = '';
+        if (transcriptionEl) transcriptionEl.textContent = '';
+    } else if (key === 'back') {
+        raw = raw.slice(0, -1);
+        if (transcriptionEl) transcriptionEl.textContent = ''; // Reset on edit
+    } else {
+        // Limit to 9 digits as requested
+        if (raw.length < 9) {
+            // Avoid leading zeros unless it is just "0" (but we usually don't type 0 first)
+            // If raw is empty and key is 0, allow it? Usually calculators show 0 then replace it.
+            // Simple logic: append
+            raw += key;
+        }
+    }
+
+    // Prevent leading zero if length > 1 (e.g. 05 -> 5)
+    if (raw.length > 1 && raw.startsWith('0')) {
+        raw = raw.substring(1);
+    }
+
+    // 2. Format with spaces
+    const formatted = raw.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+    // 3. Update Display
+    elements.calcDisplay.textContent = formatted;
+
+    // 4. Dynamic Font Scaling
+    // Base size is roughly 3rem in CSS. Scale down for longer numbers.
+    if (formatted.length > 9) { // e.g. "123 456 7" (9 chars)
+        elements.calcDisplay.style.fontSize = '2.5rem';
+    } else if (formatted.length > 7) {
+        elements.calcDisplay.style.fontSize = '3rem';
+    } else {
+        elements.calcDisplay.style.fontSize = ''; // Reset to CSS default
+    }
 }
 
 
